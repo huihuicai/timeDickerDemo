@@ -28,8 +28,7 @@ public class TuneWheel extends View {
 	private static final int ITEM_HALF_DIVIDER = 40;
 	private static final int ITEM_ONE_DIVIDER = 10;
 
-	private static final int ITEM_MAX_HEIGHT = 20;
-	private static final int ITEM_MIN_HEIGHT = 20;
+	private static final int ITEM_MAX_HEIGHT = 40;
 
 	private static final int TEXT_SIZE = 18;
 
@@ -124,7 +123,7 @@ public class TuneWheel extends View {
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
-		canvas.drawLine(0, 10, mWidth, 10, new Paint());
+		canvas.drawLine(0, 40, mWidth, 40, new Paint());
 		drawScaleLine(canvas);
 		drawMiddleLine(canvas);
 	}
@@ -147,21 +146,36 @@ public class TuneWheel extends View {
 		int width = mWidth, drawCount = 0;
 		float xPosition = 0, textWidth = Layout.getDesiredWidth("0", textPaint);
 
+		int drawNumber = mValue;
+		int numSize = 0;
 		for (int i = 0; i <= 12; i++) {
-
-			int numSize = String.valueOf(mValue + i).length();
 
 			xPosition = -mMove + i * mLineDivider
 					+ (float) (mLineDivider * 0.5);
-			canvas.drawLine(xPosition, getPaddingTop() + 10, xPosition,
-					mDensity * ITEM_MAX_HEIGHT, linePaint);
 
 			if (mValue + i <= mMaxValue) {
-				canvas.drawText(String.valueOf(mValue + i), xPosition
-						- (textWidth * numSize / 2), 100, textPaint);
+				drawNumber = mValue + i;
+			} else {
+				drawNumber = mValue + i - mMaxValue;
 			}
 
-			drawCount += mLineDivider;
+			numSize = String.valueOf(drawNumber).length();
+			canvas.drawText(String.valueOf(drawNumber), xPosition
+					- (textWidth * numSize / 2), 120,
+					textPaint);
+
+			if (drawNumber == 1) {
+				canvas.drawLine(xPosition, 0, xPosition, mDensity
+						* ITEM_MAX_HEIGHT, linePaint);
+				canvas.drawText(String.valueOf(mTopValue), xPosition
+						, 30,
+						textPaint);
+			} else {
+				canvas.drawLine(xPosition, getPaddingTop() + 40, xPosition,
+						mDensity * ITEM_MAX_HEIGHT, linePaint);
+			}
+
+			// drawCount += mLineDivider;
 		}
 
 		canvas.restore();
@@ -243,36 +257,33 @@ public class TuneWheel extends View {
 		if (Math.abs(tValue) > 0) {
 			mValue += tValue;
 			mMove -= tValue * mLineDivider * mDensity;
+			Log.e("changeMoveAndValue", "mValue:"+mValue+"   mMove:"+mMove);
 			// 如果当前的topValue不小于当前值减2（2013）,那么最小值下于1的时候，value赋值为12
 			// 如果当前的topValue不大于当前值加2（2017）,那么最大值大于12的时候，value赋值为1
 			// 如果当前的topValue超过了当前值减2（2013）,那么最小值下于1的时候，value赋值为1
 			// 如果当前的topValue超过了当前值加2（2017）,那么最小值大于12的时候，value赋值为12
-			if (mTopValue == mTopValue + 2) {
+			if (mTopValue == 2017) {
 				Log.e("changeMoveAndValue", "最大的top值");
 				mValue = mValue > mMaxValue ? mMaxValue : mValue;
-			} else if (mTopValue == mTopValue - 2) {
+			} else if (mTopValue == 2013) {
 				Log.e("changeMoveAndValue", "最小的top值");
 				mValue = mValue < 1 ? 1 : mValue;
 			} else {
-				Log.e("changeMoveAndValue", "非最大最小top值");
-				if (mValue < 1) {
+				if (mValue <= 1) {
+					Log.e("changeMoveAndValue", "mValue小于1");
 					mValue = mMaxValue;
 					mTopValue -= 1;
-				} else if (mValue < mMaxValue) {
+				} else if (mValue > mMaxValue) {
+					Log.e("changeMoveAndValue", "mValue大于12");
 					mTopValue += 1;
 					mValue = 1;
 				}
 			}
-
+			Log.e("changeMoveAndValue", "最终的mValue:"+mValue+"   最终的mTopValue:"+mTopValue);
 			mMove = 0;
 			mScroller.forceFinished(true);
-			// if (mValue <= 0 || mValue > mMaxValue) {
-			// mValue = mValue <= 0 ? 0 : mMaxValue;
-			// mMove = 0;
-			// mScroller.forceFinished(true);
-			// }
+			postInvalidate();
 		}
-		postInvalidate();
 	}
 
 	/**
@@ -282,17 +293,15 @@ public class TuneWheel extends View {
 		// 四舍五入
 		int roundMove = Math.round(mMove / (mLineDivider * mDensity));
 		mValue = mValue + roundMove;
-//		mValue = mValue <= 0 ? 0 : mValue;
-//		mValue = mValue > mMaxValue ? mMaxValue : mValue;
-		if (mTopValue == mTopValue + 2) {
+		if (mTopValue == 2017) {
 			mValue = mValue > mMaxValue ? mMaxValue : mValue;
-		} else if (mTopValue == mTopValue - 2) {
+		} else if (mTopValue == 2013) {
 			mValue = mValue < 1 ? 1 : mValue;
 		} else {
-			if (mValue < 1) {
+			if (mValue <= 1) {
 				mValue = mMaxValue;
 				mTopValue -= 1;
-			} else if (mValue < mMaxValue) {
+			} else if (mValue > mMaxValue) {
 				mTopValue += 1;
 				mValue = 1;
 			}

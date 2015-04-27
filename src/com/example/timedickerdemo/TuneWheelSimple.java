@@ -46,8 +46,6 @@ public class TuneWheelSimple extends View {
 	private float mDensity;
 	private int mValue = 50, mMaxValue = 100, mModType = MOD_TYPE_HALF,
 			mLineDivider = ITEM_HALF_DIVIDER;
-	// private int mValue = 50, mMaxValue = 500, mModType = MOD_TYPE_ONE,
-	// mLineDivider = ITEM_ONE_DIVIDER;
 
 	private int mLastX, mMove;
 	private int mWidth, mHeight;
