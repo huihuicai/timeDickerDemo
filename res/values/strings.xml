@@ -4,5 +4,6 @@
     <string name="app_name">TimeDickerDemo</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="current_date">当前是:%1$d年%2$d月</string>
 
 </resources>

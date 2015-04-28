@@ -18,22 +18,18 @@ import android.widget.Scroller;
 @SuppressLint("ClickableViewAccessibility")
 public class TuneWheel extends View {
 
-	public interface OnValueChangeListener {
-		public void onValueChange(float value);
-	}
-
 	public static final int MOD_TYPE_HALF = 2;
 	public static final int MOD_TYPE_ONE = 10;
 
 	private static final int ITEM_HALF_DIVIDER = 40;
 	private static final int ITEM_ONE_DIVIDER = 10;
 
-	private static final int ITEM_MAX_HEIGHT = 40;
+	private static final int ITEM_MAX_HEIGHT = 50;
 
 	private static final int TEXT_SIZE = 18;
 
 	private float mDensity;
-	private int mValue = 1, mMaxValue = 12, mModType = MOD_TYPE_ONE,
+	private int mValue = 1, mMaxValue = 12, mModType = MOD_TYPE_HALF,
 			mLineDivider = ITEM_HALF_DIVIDER;
 
 	private int mLastX, mMove;
@@ -44,14 +40,10 @@ public class TuneWheel extends View {
 	private VelocityTracker mVelocityTracker;
 
 	private OnValueChangeListener mListener;
-	/**
-	 * 上面的数值
-	 */
+
 	private int mTopValue = 2015;
-	/**
-	 * 滑动的方向(手指向左滑：true,手指向右滑:false)
-	 */
-	private boolean mOrientation;
+	
+	private int mDrawValue = mTopValue;
 
 	@SuppressWarnings("deprecation")
 	public TuneWheel(Context context, AttributeSet attrs) {
@@ -65,26 +57,24 @@ public class TuneWheel extends View {
 
 	}
 
-	/**
-	 * 
-	 * 考虑可扩展，但是时间紧迫，只可以支持两种类型效果图中两种类型
-	 * 
-	 * @param value
-	 *            初始值
-	 * @param maxValue
-	 *            最大值
-	 * @param model
-	 *            刻度盘精度：<br>
-	 *            {@link MOD_TYPE_HALF}<br>
-	 *            {@link MOD_TYPE_ONE}<br>
-	 */
 	public void initViewParam(int defaultValue, int maxValue, int model) {
+		switch (model) {
+		case MOD_TYPE_HALF:
+			mModType = MOD_TYPE_HALF;
+			mLineDivider = ITEM_HALF_DIVIDER;
+			mValue = defaultValue * 2;
+			mMaxValue = maxValue * 2;
+			break;
+		case MOD_TYPE_ONE:
+			mModType = MOD_TYPE_ONE;
+			mLineDivider = ITEM_ONE_DIVIDER;
+			mValue = defaultValue;
+			mMaxValue = maxValue;
+			break;
 
-		mModType = MOD_TYPE_ONE;
-		mLineDivider = ITEM_ONE_DIVIDER;
-		mValue = defaultValue;
-		mMaxValue = maxValue;
-
+		default:
+			break;
+		}
 		invalidate();
 
 		mLastX = 0;
@@ -113,23 +103,22 @@ public class TuneWheel extends View {
 	@Override
 	protected void onLayout(boolean changed, int left, int top, int right,
 			int bottom) {
-		Log.e("onLayout", "执行了onLayout");
 		mWidth = getWidth();
 		mHeight = getHeight();
-		mLineDivider = (int) (1.0 * mWidth / 12.5);
+		mLineDivider = (int) (mWidth / 12.5);
 		super.onLayout(changed, left, top, right, bottom);
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
-		canvas.drawLine(0, 40, mWidth, 40, new Paint());
+
 		drawScaleLine(canvas);
 		drawMiddleLine(canvas);
 	}
 
 	/**
-	 * 从中间往两边开始画刻度线
+	 * 画出刻度线和对应的数字
 	 * 
 	 * @param canvas
 	 */
@@ -143,15 +132,16 @@ public class TuneWheel extends View {
 		TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
 		textPaint.setTextSize(TEXT_SIZE * mDensity);
 
+		canvas.drawLine(0, 50, mWidth, 50, linePaint);
+
 		int width = mWidth, drawCount = 0;
 		float xPosition = 0, textWidth = Layout.getDesiredWidth("0", textPaint);
 
-		int drawNumber = mValue;
-		int numSize = 0;
-		for (int i = 0; i <= 12; i++) {
+		int drawNumber = 1;
+		for (int i = 0; drawCount <= width; i++) {
+			int numSize = String.valueOf(mValue + i).length();
 
-			xPosition = -mMove + i * mLineDivider
-					+ (float) (mLineDivider * 0.5);
+			xPosition = (float) (-mMove + (i + 0.5) * mLineDivider);
 
 			if (mValue + i <= mMaxValue) {
 				drawNumber = mValue + i;
@@ -159,26 +149,24 @@ public class TuneWheel extends View {
 				drawNumber = mValue + i - mMaxValue;
 			}
 
-			numSize = String.valueOf(drawNumber).length();
-			canvas.drawText(String.valueOf(drawNumber), xPosition
-					- (textWidth * numSize / 2), 120,
-					textPaint);
-
 			if (drawNumber == 1) {
-				canvas.drawLine(xPosition, 0, xPosition, mDensity
+				canvas.drawLine(xPosition, getPaddingTop(), xPosition, mDensity
 						* ITEM_MAX_HEIGHT, linePaint);
-				canvas.drawText(String.valueOf(mTopValue), xPosition
-						, 30,
+				canvas.drawText(String.valueOf(mDrawValue), xPosition, 30,
 						textPaint);
 			} else {
-				canvas.drawLine(xPosition, getPaddingTop() + 40, xPosition,
+				canvas.drawLine(xPosition, getPaddingTop() + 50, xPosition,
 						mDensity * ITEM_MAX_HEIGHT, linePaint);
 			}
 
-			// drawCount += mLineDivider;
+			canvas.drawText(String.valueOf(drawNumber), xPosition
+					- (textWidth * numSize / 2), getHeight() - textWidth,
+					textPaint);
+
+			drawCount += mLineDivider;
 		}
 
-		canvas.restore();
+//		canvas.restore();
 	}
 
 	/**
@@ -191,10 +179,10 @@ public class TuneWheel extends View {
 		canvas.save();
 
 		Paint redPaint = new Paint();
-		redPaint.setStrokeWidth(4);
+		redPaint.setStrokeWidth(10);
 		redPaint.setColor(Color.RED);
-		canvas.drawLine((float) (mLineDivider * 0.5), 0,
-				(float) (mLineDivider * 0.5), mHeight, redPaint);
+		canvas.drawLine((float) (0.5 * mLineDivider), 0,
+				(float) (0.5 * mLineDivider), mHeight, redPaint);
 
 		canvas.restore();
 	}
@@ -219,11 +207,6 @@ public class TuneWheel extends View {
 			break;
 		case MotionEvent.ACTION_MOVE:
 			mMove += (mLastX - xPosition);
-			if (mLastX - xPosition >= 0) {
-				mOrientation = true;
-			} else {
-				mOrientation = false;
-			}
 			changeMoveAndValue();
 			break;
 		case MotionEvent.ACTION_UP:
@@ -250,62 +233,86 @@ public class TuneWheel extends View {
 	}
 
 	/**
-	 * MOVE的值发生变化，语气对应的value也随之变化
+	 * 滑动的时候，时刻计算此时的值
 	 */
 	private void changeMoveAndValue() {
-		int tValue = (int) (mMove / (mLineDivider * mDensity));
+		int tValue = Math.round(mMove / ((float) 1.0 * mLineDivider));
 		if (Math.abs(tValue) > 0) {
 			mValue += tValue;
-			mMove -= tValue * mLineDivider * mDensity;
-			Log.e("changeMoveAndValue", "mValue:"+mValue+"   mMove:"+mMove);
-			// 如果当前的topValue不小于当前值减2（2013）,那么最小值下于1的时候，value赋值为12
-			// 如果当前的topValue不大于当前值加2（2017）,那么最大值大于12的时候，value赋值为1
-			// 如果当前的topValue超过了当前值减2（2013）,那么最小值下于1的时候，value赋值为1
-			// 如果当前的topValue超过了当前值加2（2017）,那么最小值大于12的时候，value赋值为12
-			if (mTopValue == 2017) {
-				Log.e("changeMoveAndValue", "最大的top值");
-				mValue = mValue > mMaxValue ? mMaxValue : mValue;
-			} else if (mTopValue == 2013) {
-				Log.e("changeMoveAndValue", "最小的top值");
-				mValue = mValue < 1 ? 1 : mValue;
-			} else {
-				if (mValue <= 1) {
-					Log.e("changeMoveAndValue", "mValue小于1");
-					mValue = mMaxValue;
-					mTopValue -= 1;
-				} else if (mValue > mMaxValue) {
-					Log.e("changeMoveAndValue", "mValue大于12");
-					mTopValue += 1;
+			mMove -= tValue * mLineDivider;
+			if (mValue <= 1) {
+				if (mTopValue == 2013) {
 					mValue = 1;
+					mDrawValue = 2013;
+					mTopValue = 2013;
+					Log.e("现在value的值是在2013", "mTopValue:"+mTopValue+"   mDrawValue:"+mDrawValue);
+				} else {
+					mValue = mMaxValue;
+					mDrawValue = mTopValue;
+					mTopValue -= 1;
+					Log.e("现在value的值不是在2013", "mTopValue:"+mTopValue+"   mDrawValue:"+mDrawValue);
+
 				}
+			} else if (mValue > mMaxValue) {
+				mValue = 1;
+				if (mTopValue == 2016) {
+					Log.e("value是2016", "mTopValue:"+mTopValue+"   mDrawValue:"+mDrawValue);
+					mDrawValue = 2017;
+					mTopValue = 2017;
+				}else{
+					Log.e("最大值大于12", "mTopValue:"+mTopValue+"   mDrawValue:"+mDrawValue);
+					mTopValue += 1;
+					mDrawValue = mTopValue; 
+				}
+			}else if(mTopValue == mDrawValue){
+				mDrawValue += 1;
 			}
-			Log.e("changeMoveAndValue", "最终的mValue:"+mValue+"   最终的mTopValue:"+mTopValue);
-			mMove = 0;
-			mScroller.forceFinished(true);
-			postInvalidate();
+
+//			 mMove = 0;
+//			 mScroller.forceFinished(true);
+			// if (mValue <= 1 || mValue > mMaxValue) {
+			// mValue = mValue <= 1 ? 1 : mMaxValue;
+			// mMove = 0;
+			// mScroller.forceFinished(true);
+			// }
+			notifyValueChange();
 		}
+		postInvalidate();
 	}
 
 	/**
-	 * 计算最后的value的值
+	 * 结束的时候，计算相应的value值
 	 */
 	private void countMoveEnd() {
-		// 四舍五入
-		int roundMove = Math.round(mMove / (mLineDivider * mDensity));
+		int roundMove = Math.round(mMove / ((float) 1.0 * mLineDivider));
 		mValue = mValue + roundMove;
-		if (mTopValue == 2017) {
-			mValue = mValue > mMaxValue ? mMaxValue : mValue;
-		} else if (mTopValue == 2013) {
-			mValue = mValue < 1 ? 1 : mValue;
-		} else {
-			if (mValue <= 1) {
-				mValue = mMaxValue;
-				mTopValue -= 1;
-			} else if (mValue > mMaxValue) {
-				mTopValue += 1;
+		Log.e("countMoveEnd", "mMove:"+mMove+"    roundMove:"+roundMove+"   mValue:"+mValue);
+
+		if (mValue < 1) {
+			Log.e("countMoveEnd", "进入到了<1的状态"+mDrawValue);
+			if (mTopValue == 2013) {
+				mDrawValue = 2013;
+				mTopValue = 2013;
 				mValue = 1;
+			} else {
+				mValue = mMaxValue;
+				mDrawValue = mTopValue;
+				mTopValue -= 1;
+			}
+		} else if (mValue > mMaxValue) {
+			Log.e("countMoveEnd", "超过了>12的状态"+mDrawValue);
+			mValue = 1;
+			if (mTopValue == 2016) {
+				mDrawValue = 2017;
+				mTopValue = 2017;
+			} else{
+				mTopValue += 1;
+				mDrawValue = mTopValue; 
 			}
 		}
+
+		// mValue = mValue <= 1 ? 1 : mValue;
+		// mValue = mValue > mMaxValue ? mMaxValue : mValue;
 
 		mLastX = 0;
 		mMove = 0;
@@ -314,19 +321,15 @@ public class TuneWheel extends View {
 		postInvalidate();
 	}
 
-	/**
-	 * 通知value的值发生了变化
-	 */
 	private void notifyValueChange() {
 		if (null != mListener) {
-			mListener.onValueChange(mValue);
+			mListener.onValueChange(mTopValue,mValue);
 		}
 	}
 
 	@Override
 	public void computeScroll() {
 		super.computeScroll();
-		// 返回true表示动画没有结束
 		if (mScroller.computeScrollOffset()) {
 			if (mScroller.getCurrX() == mScroller.getFinalX()) { // over
 				countMoveEnd();
