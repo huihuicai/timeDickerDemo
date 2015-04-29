@@ -17,4 +17,12 @@
         android:layout_marginTop="20dp"
         android:textSize="20sp" />
 
+    <TextView
+        android:id="@+id/change"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:text="改变小车的位置" />
+
 </LinearLayout>

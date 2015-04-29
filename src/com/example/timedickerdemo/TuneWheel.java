@@ -16,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.Scroller;
 
@@ -62,6 +63,10 @@ public class TuneWheel extends View {
 	private boolean mIsRightEdge;
 
 	private Rect normal = new Rect();
+	
+	private float mMarkMoveLenth;
+	
+	private boolean mMoveMark;
 
 	@SuppressWarnings("deprecation")
 	public TuneWheel(Context context, AttributeSet attrs) {
@@ -102,6 +107,21 @@ public class TuneWheel extends View {
 		mMove = 0;
 		notifyValueChange();
 	}
+	
+	/**
+	 * 标志物需要移动到的位置
+	 * @param year
+	 * @param month
+	 * @param day
+	 */
+	public void setMoveDestination(int year,int month,int day){
+		mMoveMark = true;
+		mMarkMoveLenth = Math.round(((year - mTopValue)*12 + (month - mValue) + day/30.0 + 0.5)*mLineDivider);
+		Log.e("setMoveDestination", "mMarkMoveLenth:"+mMarkMoveLenth);
+		postInvalidate();
+		mLastX = 0;
+		mMove = 0;
+	}
 
 	/**
 	 * 设置用于接收结果的监听器
@@ -110,15 +130,6 @@ public class TuneWheel extends View {
 	 */
 	public void setValueChangeListener(OnValueChangeListener listener) {
 		mListener = listener;
-	}
-
-	/**
-	 * 获取当前刻度值
-	 * 
-	 * @return
-	 */
-	public float getValue() {
-		return mValue;
 	}
 
 	@Override
@@ -133,9 +144,36 @@ public class TuneWheel extends View {
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
-
 		drawScaleLine(canvas);
 		drawMiddleLine(canvas);
+		drawMarker(canvas);
+	}
+	
+	private void drawMarker(Canvas canvas){
+		canvas.save();
+		if(mMoveMark){
+			long lastTime = 0;
+			long currentTime = System.currentTimeMillis();
+			int len = 0;
+			for (int i = 0; len <= Math.abs(mMarkMoveLenth); i++) {
+				Log.e("drawMarker", "平明的循环");
+				currentTime = System.currentTimeMillis();
+				while(currentTime - lastTime >= 50){
+					if(mMarkMoveLenth >= 0){
+						canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
+						len += 20;
+					}else{
+						canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
+						len = mWidth - 20*i;
+					}
+					lastTime = currentTime;
+				}
+				lastTime = currentTime;
+			}
+		}else{
+			canvas.drawBitmap(mDrawBitamp, mBitmapMove, 0, new Paint());
+		}
+		canvas.restore();
 	}
 
 	/**
@@ -154,8 +192,6 @@ public class TuneWheel extends View {
 		textPaint.setTextSize(TEXT_SIZE * mDensity);
 
 		canvas.drawLine(0, 50, mWidth, 50, linePaint);
-
-		canvas.drawBitmap(mDrawBitamp, mBitmapMove, 0, new Paint());
 
 		int width = mWidth, drawCount = 0;
 		float xPosition = 0, textWidth = Layout.getDesiredWidth("0", textPaint);
