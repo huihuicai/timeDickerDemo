@@ -2,9 +2,12 @@ package com.example.timedickerdemo;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.text.Layout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
@@ -13,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.animation.TranslateAnimation;
 import android.widget.Scroller;
 
 @SuppressLint("ClickableViewAccessibility")
@@ -42,8 +46,22 @@ public class TuneWheel extends View {
 	private OnValueChangeListener mListener;
 
 	private int mTopValue = 2015;
-	
+
+	private int mMaxTop = mTopValue + 2;
+
+	private int mMinTop = mTopValue - 2;
+
 	private int mDrawValue = mTopValue;
+
+	private Bitmap mDrawBitamp;
+
+	private int mBitmapMove;
+
+	private boolean mIsLeftEdge;
+
+	private boolean mIsRightEdge;
+
+	private Rect normal = new Rect();
 
 	@SuppressWarnings("deprecation")
 	public TuneWheel(Context context, AttributeSet attrs) {
@@ -54,6 +72,9 @@ public class TuneWheel extends View {
 
 		mMinVelocity = ViewConfiguration.get(getContext())
 				.getScaledMinimumFlingVelocity();
+
+		mDrawBitamp = BitmapFactory.decodeResource(getResources(),
+				R.drawable.car);
 
 	}
 
@@ -134,6 +155,8 @@ public class TuneWheel extends View {
 
 		canvas.drawLine(0, 50, mWidth, 50, linePaint);
 
+		canvas.drawBitmap(mDrawBitamp, mBitmapMove, 0, new Paint());
+
 		int width = mWidth, drawCount = 0;
 		float xPosition = 0, textWidth = Layout.getDesiredWidth("0", textPaint);
 
@@ -166,7 +189,7 @@ public class TuneWheel extends View {
 			drawCount += mLineDivider;
 		}
 
-//		canvas.restore();
+		canvas.restore();
 	}
 
 	/**
@@ -207,6 +230,19 @@ public class TuneWheel extends View {
 			break;
 		case MotionEvent.ACTION_MOVE:
 			mMove += (mLastX - xPosition);
+			if (mIsLeftEdge && mMove < 0) {
+				mMove = 0;
+				break;
+			}
+			if (mIsRightEdge && mMove > 0) {
+				mMove = 0;
+				break;
+			}
+
+			mIsLeftEdge = false;
+			mIsRightEdge = false;
+
+			mBitmapMove += (xPosition - mLastX);
 			changeMoveAndValue();
 			break;
 		case MotionEvent.ACTION_UP:
@@ -223,8 +259,34 @@ public class TuneWheel extends View {
 		return true;
 	}
 
+	/**
+	 * 从边缘的位置拖拽
+	 * 
+	 * @param preX
+	 * @param currentX
+	 */
+	private void pullToEdge(int preX, int currentX) {
+		int deltay = (preX - currentX) / 4;
+		if (normal.isEmpty()) {
+			normal.set(getLeft(), getTop(), getRight(), getBottom());
+		}
+		layout(getLeft() - deltay, getTop(), getRight() - deltay, getBottom());
+	}
+
+	/**
+	 * 回弹时候的动画
+	 */
+	private void reBackAnimation() {
+		TranslateAnimation ta = new TranslateAnimation(0, 0, getTop(),
+				normal.top);
+		ta.setDuration(200);
+		startAnimation(ta);
+		layout(normal.left, normal.top, normal.right, normal.bottom);
+		normal.setEmpty();
+	}
+
 	private void countVelocityTracker(MotionEvent event) {
-		mVelocityTracker.computeCurrentVelocity(1000);
+		mVelocityTracker.computeCurrentVelocity(1000, 3000);
 		float xVelocity = mVelocityTracker.getXVelocity();
 		if (Math.abs(xVelocity) > mMinVelocity) {
 			mScroller.fling(0, 0, (int) xVelocity, 0, Integer.MIN_VALUE,
@@ -241,40 +303,41 @@ public class TuneWheel extends View {
 			mValue += tValue;
 			mMove -= tValue * mLineDivider;
 			if (mValue <= 1) {
-				if (mTopValue == 2013) {
+				if (mValue == 1) {
+					mBitmapMove += mLineDivider;
+				}
+				Log.e("changeMoveAndValue", "mValue的值下于1了,tValue:" + tValue);
+				if (mTopValue == mMinTop) {
 					mValue = 1;
-					mDrawValue = 2013;
-					mTopValue = 2013;
-					Log.e("现在value的值是在2013", "mTopValue:"+mTopValue+"   mDrawValue:"+mDrawValue);
+					mDrawValue = mMinTop;
+					mTopValue = mMinTop;
+					mIsLeftEdge = true;
 				} else {
 					mValue = mMaxValue;
 					mDrawValue = mTopValue;
 					mTopValue -= 1;
-					Log.e("现在value的值不是在2013", "mTopValue:"+mTopValue+"   mDrawValue:"+mDrawValue);
 
 				}
 			} else if (mValue > mMaxValue) {
 				mValue = 1;
-				if (mTopValue == 2016) {
-					Log.e("value是2016", "mTopValue:"+mTopValue+"   mDrawValue:"+mDrawValue);
-					mDrawValue = 2017;
-					mTopValue = 2017;
-				}else{
-					Log.e("最大值大于12", "mTopValue:"+mTopValue+"   mDrawValue:"+mDrawValue);
+				if (mTopValue >= mMaxTop - 1) {
+					mDrawValue = mMaxTop;
+					mTopValue = mMaxTop;
+					mIsRightEdge = true;
+					Log.e("changeMoveAndValue", "mValue > mMaxValue");
+				} else {
 					mTopValue += 1;
-					mDrawValue = mTopValue; 
+					mDrawValue = mTopValue;
 				}
-			}else if(mTopValue == mDrawValue){
-				mDrawValue += 1;
+			} else if (mTopValue == mDrawValue) {
+				if (mTopValue < mMaxTop) {
+					mDrawValue += 1;
+				} else {
+					Log.e("changeMoveAndValue", "mTopValue == mDrawValue");
+					mIsRightEdge = true;
+				}
 			}
 
-//			 mMove = 0;
-//			 mScroller.forceFinished(true);
-			// if (mValue <= 1 || mValue > mMaxValue) {
-			// mValue = mValue <= 1 ? 1 : mMaxValue;
-			// mMove = 0;
-			// mScroller.forceFinished(true);
-			// }
 			notifyValueChange();
 		}
 		postInvalidate();
@@ -286,13 +349,12 @@ public class TuneWheel extends View {
 	private void countMoveEnd() {
 		int roundMove = Math.round(mMove / ((float) 1.0 * mLineDivider));
 		mValue = mValue + roundMove;
-		Log.e("countMoveEnd", "mMove:"+mMove+"    roundMove:"+roundMove+"   mValue:"+mValue);
-
+		mBitmapMove += mMove % mLineDivider;
 		if (mValue < 1) {
-			Log.e("countMoveEnd", "进入到了<1的状态"+mDrawValue);
-			if (mTopValue == 2013) {
-				mDrawValue = 2013;
-				mTopValue = 2013;
+			if (mTopValue == mMinTop) {
+				mIsLeftEdge = true;
+				mDrawValue = mMinTop;
+				mTopValue = mMinTop;
 				mValue = 1;
 			} else {
 				mValue = mMaxValue;
@@ -300,19 +362,16 @@ public class TuneWheel extends View {
 				mTopValue -= 1;
 			}
 		} else if (mValue > mMaxValue) {
-			Log.e("countMoveEnd", "超过了>12的状态"+mDrawValue);
 			mValue = 1;
-			if (mTopValue == 2016) {
-				mDrawValue = 2017;
-				mTopValue = 2017;
-			} else{
+			if (mTopValue == mMaxTop - 1) {
+				mIsRightEdge = true;
+				mDrawValue = mMaxTop;
+				mTopValue = mMaxTop;
+			} else {
 				mTopValue += 1;
-				mDrawValue = mTopValue; 
+				mDrawValue = mTopValue;
 			}
 		}
-
-		// mValue = mValue <= 1 ? 1 : mValue;
-		// mValue = mValue > mMaxValue ? mMaxValue : mValue;
 
 		mLastX = 0;
 		mMove = 0;
@@ -323,7 +382,7 @@ public class TuneWheel extends View {
 
 	private void notifyValueChange() {
 		if (null != mListener) {
-			mListener.onValueChange(mTopValue,mValue);
+			mListener.onValueChange(mTopValue, mValue);
 		}
 	}
 
@@ -332,10 +391,27 @@ public class TuneWheel extends View {
 		super.computeScroll();
 		if (mScroller.computeScrollOffset()) {
 			if (mScroller.getCurrX() == mScroller.getFinalX()) { // over
+				// if (mIsEdge) {
+				// mIsEdge = false;
+				// return;
+				// }
 				countMoveEnd();
 			} else {
 				int xPosition = mScroller.getCurrX();
 				mMove += (mLastX - xPosition);
+				if (mIsLeftEdge && mMove < 0) {
+					mMove = 0;
+					return;
+				}
+				if (mIsRightEdge && mMove > 0) {
+					mMove = 0;
+					return;
+				}
+
+				mIsLeftEdge = false;
+				mIsRightEdge = false;
+
+				mBitmapMove += (xPosition - mLastX);
 				changeMoveAndValue();
 				mLastX = xPosition;
 			}
