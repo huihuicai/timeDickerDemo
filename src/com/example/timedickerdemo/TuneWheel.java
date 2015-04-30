@@ -16,7 +16,6 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.Scroller;
 
@@ -150,15 +149,15 @@ public class TuneWheel extends View {
 	}
 	
 	private void drawMarker(Canvas canvas){
-		canvas.save();
+//		canvas.save();
 		if(mMoveMark){
 			long lastTime = 0;
 			long currentTime = System.currentTimeMillis();
 			int len = 0;
 			for (int i = 0; len <= Math.abs(mMarkMoveLenth); i++) {
-				Log.e("drawMarker", "平明的循环");
+				Log.e("drawMarker", "拼命的循环");
 				currentTime = System.currentTimeMillis();
-				while(currentTime - lastTime >= 50){
+//				while(currentTime - lastTime >= 50){
 					if(mMarkMoveLenth >= 0){
 						canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
 						len += 20;
@@ -166,14 +165,12 @@ public class TuneWheel extends View {
 						canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
 						len = mWidth - 20*i;
 					}
-					lastTime = currentTime;
-				}
-				lastTime = currentTime;
+//				}
 			}
 		}else{
 			canvas.drawBitmap(mDrawBitamp, mBitmapMove, 0, new Paint());
 		}
-		canvas.restore();
+//		canvas.restore();
 	}
 
 	/**
@@ -228,11 +225,7 @@ public class TuneWheel extends View {
 		canvas.restore();
 	}
 
-	/**
-	 * 画中间的红色指示线、阴影等。指示线两端简单的用了两个矩形代替
-	 * 
-	 * @param canvas
-	 */
+	
 	private void drawMiddleLine(Canvas canvas) {
 
 		canvas.save();
