@@ -7,31 +7,39 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
+import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 public class TimeLineView extends FrameLayout {
 
-	public interface OnValueChangeListener {
-		void oonValueChanged(int topValue, int bottomValue);
+	public interface OnValueChangeListener1 {
+		void oonValueChanged(boolean isSlipStop,int topValue, int bottomValue);
 	}
-
-	private OnValueChangeListener mOnValueChangeListener;
+	
+	private OnValueChangeListener1 mOnValueChangeListener;
 
 	private MyHorizontalScrollView mHorizontalScrollView;
 	private LinearLayout mContainer;
+	private ImageView mMoveMark;
 
 	private int mScreenWidth;
 	private int mLineGap;
-	private float mMarkLeft;
-	
+	private int mMarkLeft;
+
 	private int mTopValue;
 	private int mBottomValue;
 	private int mDeltayValue;
+	private float mMarkMoveLenth;
+	private float mMarkLenth = 0;
+	
+	private int mYear = 2013;
+	private int mMonth = 1;
+	private int mDay = 1;
 
-	LinearLayout.LayoutParams localLayoutParams = new LinearLayout.LayoutParams(
-			1080, LinearLayout.LayoutParams.WRAP_CONTENT);
+	private LinearLayout.LayoutParams normalLayoutParams;
+	private LinearLayout.LayoutParams bigLayoutParams;
 
 	public TimeLineView(Context context) {
 		super(context);
@@ -41,7 +49,12 @@ public class TimeLineView extends FrameLayout {
 		super(context, attrs);
 		mScreenWidth = getContext().getResources().getDisplayMetrics().widthPixels;
 		mLineGap = (int) (mScreenWidth / 12.5);
-		mMarkLeft = (float) (0.5 * mScreenWidth / 12.5);
+		mMarkLeft = (int) (0.5 * mLineGap);
+		normalLayoutParams = new LinearLayout.LayoutParams(mScreenWidth
+				- mMarkLeft, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+		bigLayoutParams = new LinearLayout.LayoutParams(mScreenWidth,
+				LinearLayout.LayoutParams.WRAP_CONTENT);
 		init(context);
 	}
 
@@ -52,12 +65,17 @@ public class TimeLineView extends FrameLayout {
 	private void init(Context context) {
 		LayoutInflater.from(context).inflate(R.layout.time_line_view, this,
 				true);
+		mMoveMark = (ImageView) findViewById(R.id.move_mark);
 		mHorizontalScrollView = (MyHorizontalScrollView) findViewById(R.id.time_line_scroll);
 		mContainer = (LinearLayout) findViewById(R.id.time_line_container);
 		for (int i = 0; i < 5; i++) {
 			TimeLine timeLine = new TimeLine(context, null);
 			timeLine.setCurrentTopValue(2015 + i - 2);
-			mContainer.addView(timeLine, localLayoutParams);
+			if (i < 4) {
+				mContainer.addView(timeLine, normalLayoutParams);
+			} else {
+				mContainer.addView(timeLine, bigLayoutParams);
+			}
 		}
 
 		mHorizontalScrollView.setStopListener(new StopListenter() {
@@ -65,12 +83,12 @@ public class TimeLineView extends FrameLayout {
 			public void stop(boolean isStop) {
 				// TODO 处理停止后的事件处理
 				int scrollX = mHorizontalScrollView.getScrollX();
-				int deltay = (int) ((scrollX - 40) / mLineGap);
-				mDeltayValue = (scrollX - 40) % mLineGap;
+				int deltay = (int) (scrollX / mLineGap);
+				mDeltayValue = Math.abs(scrollX % mLineGap);
 				mTopValue = deltay / 12 + 2013;
-				mBottomValue = deltay % 12;
-				Log.e("stop===", "year:" + mTopValue + "    month:" + mBottomValue
-						+ "   scrollX:" + scrollX);
+				mBottomValue = deltay % 12 + 1;
+				Log.e("stop===", "year:" + mTopValue + "    month:"
+						+ mBottomValue + "   scrollX:" + scrollX);
 
 				if (isStop) {
 					Log.e("mHorizontalScrollView", "已经停止了");
@@ -78,27 +96,63 @@ public class TimeLineView extends FrameLayout {
 				}
 
 				if (mOnValueChangeListener != null) {
-					mOnValueChangeListener.oonValueChanged(mTopValue, mBottomValue);
+					mOnValueChangeListener.oonValueChanged(isStop,mTopValue,
+							mBottomValue);
 				}
 			}
 		});
 	}
 
-	public void setOnValueChangeListener(OnValueChangeListener changeListener) {
+	public void setOnValueChangeListener(OnValueChangeListener1 changeListener) {
 		mOnValueChangeListener = changeListener;
 	}
 
 	private void handleStop() {
 		// TODO 计算当前的值，如果不是正好的位置，那就要回弹到一个最近位置
-		int deltay = mLineGap/2 - mDeltayValue;
-		
-		if(deltay > 0){
-			mBottomValue += 1;
-		}else{
-			mBottomValue -= 1;
+		if (mDeltayValue == 0) {
+			return;
 		}
-		mHorizontalScrollView.smoothScrollBy(deltay, 0);
+		int delta = mDeltayValue - Math.round((float) (mLineGap / 2.0));
+		Log.e("handleStop", "delta:" + delta + "   mDeltayValue:"
+				+ mDeltayValue);
+		if (delta > 0) {
+			mBottomValue += 1;
+		} else {
+			delta = -mDeltayValue;
+		}
+		mHorizontalScrollView.smoothScrollBy(delta, 0);
+
+	}
+
+	/**
+	 * 小标志物的移动
+	 * 
+	 * @param year
+	 * @param month
+	 * @param day
+	 */
+	public void setMarkDestion(int year, int month, int day) {
+		mMarkMoveLenth = Math.round(((year - mYear) * 12
+				+ (month - mMonth) + (day - mDay)/ 30.0)
+				* mLineGap);
+		Log.e("setMarkDestion", "year:"+(year - mTopValue)+"    month:"+(month - mBottomValue)+"   距离："+mMarkMoveLenth);
+		TranslateAnimation animation;
+		if (mMarkMoveLenth >= 0) {
+			animation = new TranslateAnimation(mMarkLenth, mMarkMoveLenth, 0, 0);
+		} else {
+			animation = new TranslateAnimation(mScreenWidth, mMarkMoveLenth, 0,
+					0);
+		}
+
+		animation.setDuration(1000);
+		animation.setFillAfter(true);
+		mMoveMark.startAnimation(animation);
 		
+		mYear = year;
+		mMonth = month;
+		mDay = day;
+		
+		mMarkLenth +=  mMarkMoveLenth;
 	}
 
 }
