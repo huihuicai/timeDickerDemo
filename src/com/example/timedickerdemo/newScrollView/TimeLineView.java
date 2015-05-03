@@ -3,10 +3,14 @@ package com.example.timedickerdemo.newScrollView;
 import com.example.timedickerdemo.R;
 import com.example.timedickerdemo.newScrollView.MyHorizontalScrollView.StopListenter;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -135,19 +139,25 @@ public class TimeLineView extends FrameLayout {
 		mMarkMoveLenth = Math.round(((year - mYear) * 12
 				+ (month - mMonth) + (day - mDay)/ 30.0)
 				* mLineGap);
-		Log.e("setMarkDestion", "year:"+(year - mTopValue)+"    month:"+(month - mBottomValue)+"   ¾àÀë£º"+mMarkMoveLenth);
+		if(mMarkMoveLenth == 0){
+			return;
+		}
+		Log.e("setMarkDestion", "year:"+(year - mYear)+"    month:"+(month - mMonth)+"   ¾àÀë£º"+mMarkMoveLenth);
 		TranslateAnimation animation;
-		if (mMarkMoveLenth >= 0) {
+		if (year >= mYear && month >= mMonth && day >= mDay) {
 			animation = new TranslateAnimation(mMarkLenth, mMarkMoveLenth, 0, 0);
 		} else {
-			animation = new TranslateAnimation(mScreenWidth, mMarkMoveLenth, 0,
+			animation = new TranslateAnimation(mMarkLenth, - mMarkMoveLenth, 0,
 					0);
 		}
 
 		animation.setDuration(1000);
 		animation.setFillAfter(true);
+		
 		mMoveMark.startAnimation(animation);
 		
+//		ValueAnimator animator = ObjectAnimator.ofFloat(mMoveMark,"x",mMarkLenth,mMarkMoveLenth);
+//		animator.start();
 		mYear = year;
 		mMonth = month;
 		mDay = day;
