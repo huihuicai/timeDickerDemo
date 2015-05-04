@@ -4,12 +4,12 @@
     android:layout_height="100dp"
     android:background="@android:color/white" >
 
-    <View
+   <!--  <View
         android:id="@+id/time_mark"
         android:layout_width="2dp"
         android:layout_height="20dp"
         android:layout_marginLeft="15dp"
-        android:background="@android:color/black" />
+        android:background="@android:color/black" /> -->
 
     <com.example.timedickerdemo.newScrollView.MyHorizontalScrollView
         android:id="@+id/time_line_scroll"

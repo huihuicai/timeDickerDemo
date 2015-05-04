@@ -144,33 +144,33 @@ public class TuneWheel extends View {
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 		drawScaleLine(canvas);
-		drawMiddleLine(canvas);
+		drawMarkLine(canvas);
 		drawMarker(canvas);
 	}
 	
 	private void drawMarker(Canvas canvas){
-//		canvas.save();
 		if(mMoveMark){
-			long lastTime = 0;
-			long currentTime = System.currentTimeMillis();
 			int len = 0;
-			for (int i = 0; len <= Math.abs(mMarkMoveLenth); i++) {
-				Log.e("drawMarker", "Æ´ÃüµÄÑ­»·");
-				currentTime = System.currentTimeMillis();
-//				while(currentTime - lastTime >= 50){
-					if(mMarkMoveLenth >= 0){
-						canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
-						len += 20;
-					}else{
-						canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
-						len = mWidth - 20*i;
-					}
-//				}
+			int i = 0;
+			while(len <= Math.abs(mMarkMoveLenth)){
+				canvas.drawColor(Color.TRANSPARENT);
+				if(mMarkMoveLenth >= 0){
+					canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
+					len += 20;
+				}else{
+					canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
+					len = mWidth - 20*i;
+				}
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
 			}
 		}else{
 			canvas.drawBitmap(mDrawBitamp, mBitmapMove, 0, new Paint());
 		}
-//		canvas.restore();
 	}
 
 	/**
@@ -226,15 +226,15 @@ public class TuneWheel extends View {
 	}
 
 	
-	private void drawMiddleLine(Canvas canvas) {
+	private void drawMarkLine(Canvas canvas) {
 
 		canvas.save();
 
 		Paint redPaint = new Paint();
-		redPaint.setStrokeWidth(10);
-		redPaint.setColor(Color.RED);
+		redPaint.setStrokeWidth(4);
+		redPaint.setColor(Color.BLACK);
 		canvas.drawLine((float) (0.5 * mLineDivider), 0,
-				(float) (0.5 * mLineDivider), mHeight, redPaint);
+				(float) (0.5 * mLineDivider), 50, redPaint);
 
 		canvas.restore();
 	}

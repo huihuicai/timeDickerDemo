@@ -10,6 +10,7 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -26,6 +27,7 @@ public class TimeLineView extends FrameLayout {
 	private MyHorizontalScrollView mHorizontalScrollView;
 	private LinearLayout mContainer;
 	private ImageView mMoveMark;
+	private View mMarkView;
 
 	private int mScreenWidth;
 	private int mLineGap;
@@ -68,6 +70,13 @@ public class TimeLineView extends FrameLayout {
 	private void init(Context context) {
 		LayoutInflater.from(context).inflate(R.layout.time_line_view, this,
 				true);
+		
+		mMarkView = new View(context);
+		mMarkView.setBackgroundColor(Color.BLACK);
+		FrameLayout.LayoutParams layoutParams = new LayoutParams(2, 32);
+		layoutParams.leftMargin = mMarkLeft;
+		addView(mMarkView, layoutParams);
+		
 		mMoveMark = (ImageView) findViewById(R.id.move_mark);
 		mHorizontalScrollView = (MyHorizontalScrollView) findViewById(R.id.time_line_scroll);
 		mContainer = (LinearLayout) findViewById(R.id.time_line_container);

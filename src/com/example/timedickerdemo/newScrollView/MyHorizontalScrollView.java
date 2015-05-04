@@ -15,7 +15,7 @@ public class MyHorizontalScrollView extends HorizontalScrollView {
 	private StopListenter mStopListenter;
 	private Runnable mStopRunnable;
 	private int mLastX;
-	private int DELAY = 100;
+	private int DELAY = 10;
 
 	public MyHorizontalScrollView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -45,7 +45,7 @@ public class MyHorizontalScrollView extends HorizontalScrollView {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
-		if (ev.getAction() == MotionEvent.ACTION_DOWN || ev.getAction() == MotionEvent.ACTION_UP) {
+		if (/*ev.getAction() == MotionEvent.ACTION_DOWN || */ev.getAction() == MotionEvent.ACTION_UP) {
 			// TODO 启动一个线程
 			postDelayed(mStopRunnable, DELAY);
 		}
