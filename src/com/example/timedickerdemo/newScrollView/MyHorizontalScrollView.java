@@ -2,6 +2,7 @@ package com.example.timedickerdemo.newScrollView;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.HorizontalScrollView;
 
@@ -44,8 +45,7 @@ public class MyHorizontalScrollView extends HorizontalScrollView {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
-		if (ev.getAction() == MotionEvent.ACTION_UP
-				|| ev.getAction() == MotionEvent.ACTION_CANCEL) {
+		if (ev.getAction() == MotionEvent.ACTION_DOWN || ev.getAction() == MotionEvent.ACTION_UP) {
 			// TODO 启动一个线程
 			postDelayed(mStopRunnable, DELAY);
 		}

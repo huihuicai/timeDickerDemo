@@ -3,14 +3,13 @@ package com.example.timedickerdemo.newScrollView;
 import com.example.timedickerdemo.R;
 import com.example.timedickerdemo.newScrollView.MyHorizontalScrollView.StopListenter;
 
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -19,9 +18,9 @@ import android.widget.LinearLayout;
 public class TimeLineView extends FrameLayout {
 
 	public interface OnValueChangeListener1 {
-		void oonValueChanged(boolean isSlipStop,int topValue, int bottomValue);
+		void oonValueChanged(boolean isSlipStop, int topValue, int bottomValue);
 	}
-	
+
 	private OnValueChangeListener1 mOnValueChangeListener;
 
 	private MyHorizontalScrollView mHorizontalScrollView;
@@ -37,7 +36,7 @@ public class TimeLineView extends FrameLayout {
 	private int mDeltayValue;
 	private float mMarkMoveLenth;
 	private float mMarkLenth = 0;
-	
+
 	private int mYear = 2013;
 	private int mMonth = 1;
 	private int mDay = 1;
@@ -100,7 +99,7 @@ public class TimeLineView extends FrameLayout {
 				}
 
 				if (mOnValueChangeListener != null) {
-					mOnValueChangeListener.oonValueChanged(isStop,mTopValue,
+					mOnValueChangeListener.oonValueChanged(isStop, mTopValue,
 							mBottomValue);
 				}
 			}
@@ -117,13 +116,16 @@ public class TimeLineView extends FrameLayout {
 			return;
 		}
 		int delta = mDeltayValue - Math.round((float) (mLineGap / 2.0));
-		Log.e("handleStop", "delta:" + delta + "   mDeltayValue:"
-				+ mDeltayValue);
+		Log.e("handleStop",
+				"delta:" + delta + "   mDeltayValue:" + mDeltayValue
+						+ "   mLineGap/2.0: "
+						+ Math.round((float) (mLineGap / 2.0)));
 		if (delta > 0) {
 			mBottomValue += 1;
 		} else {
 			delta = -mDeltayValue;
 		}
+
 		mHorizontalScrollView.smoothScrollBy(delta, 0);
 
 	}
@@ -136,33 +138,32 @@ public class TimeLineView extends FrameLayout {
 	 * @param day
 	 */
 	public void setMarkDestion(int year, int month, int day) {
-		mMarkMoveLenth = Math.round(((year - mYear) * 12
-				+ (month - mMonth) + (day - mDay)/ 30.0)
-				* mLineGap);
-		if(mMarkMoveLenth == 0){
+		mMarkMoveLenth = Math
+				.round(((year - mYear) * 12 + (month - mMonth) + (day - mDay) / 30.0)
+						* mLineGap);
+		if (mMarkMoveLenth == 0) {
 			return;
 		}
-		Log.e("setMarkDestion", "year:"+(year - mYear)+"    month:"+(month - mMonth)+"   ¾àÀë£º"+mMarkMoveLenth);
+		Log.e("setMarkDestion", "year:" + (year - mYear) + "    month:"
+				+ (month - mMonth) + "   ¾àÀë£º" + mMarkMoveLenth);
 		TranslateAnimation animation;
 		if (year >= mYear && month >= mMonth && day >= mDay) {
 			animation = new TranslateAnimation(mMarkLenth, mMarkMoveLenth, 0, 0);
 		} else {
-			animation = new TranslateAnimation(mMarkLenth, - mMarkMoveLenth, 0,
+			animation = new TranslateAnimation(mMarkLenth, -mMarkMoveLenth, 0,
 					0);
 		}
 
 		animation.setDuration(1000);
 		animation.setFillAfter(true);
-		
+
 		mMoveMark.startAnimation(animation);
-		
-//		ValueAnimator animator = ObjectAnimator.ofFloat(mMoveMark,"x",mMarkLenth,mMarkMoveLenth);
-//		animator.start();
+
 		mYear = year;
 		mMonth = month;
 		mDay = day;
-		
-		mMarkLenth +=  mMarkMoveLenth;
+
+		mMarkLenth += mMarkMoveLenth;
 	}
 
 }

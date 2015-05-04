@@ -62,7 +62,7 @@ public class TimeLine extends View {
 			}
 
 			canvas.drawText(String.valueOf(i + 1), marginLeft
-					- (textWidth * numberSize / 2), 4 * TEXT_SIZE * mDensity,
+					- (textWidth * numberSize / 2), 3 * TEXT_SIZE * mDensity,
 					textPaint);
 		}
 	}
