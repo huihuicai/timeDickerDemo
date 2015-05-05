@@ -22,6 +22,10 @@ import android.widget.Scroller;
 @SuppressLint("ClickableViewAccessibility")
 public class TuneWheel extends View {
 
+	public interface OnValueChangeListener {
+		public void onValueChange(int year, int month);
+	}
+
 	public static final int MOD_TYPE_HALF = 2;
 	public static final int MOD_TYPE_ONE = 10;
 
@@ -62,9 +66,9 @@ public class TuneWheel extends View {
 	private boolean mIsRightEdge;
 
 	private Rect normal = new Rect();
-	
+
 	private float mMarkMoveLenth;
-	
+
 	private boolean mMoveMark;
 
 	@SuppressWarnings("deprecation")
@@ -82,23 +86,15 @@ public class TuneWheel extends View {
 
 	}
 
-	public void initViewParam(int defaultValue, int maxValue, int model) {
-		switch (model) {
-		case MOD_TYPE_HALF:
-			mModType = MOD_TYPE_HALF;
-			mLineDivider = ITEM_HALF_DIVIDER;
-			mValue = defaultValue * 2;
-			mMaxValue = maxValue * 2;
-			break;
-		case MOD_TYPE_ONE:
-			mModType = MOD_TYPE_ONE;
-			mLineDivider = ITEM_ONE_DIVIDER;
-			mValue = defaultValue;
-			mMaxValue = maxValue;
-			break;
-
-		default:
-			break;
+	public void initViewParam(int year, int month) {
+		mTopValue = year;
+		mMaxTop = year + 2;
+		mMinTop = year - 2;
+		mValue = month;
+		if (month < 2) {
+			mDrawValue = mTopValue + 1;
+		} else {
+			mDrawValue = mTopValue;
 		}
 		invalidate();
 
@@ -107,16 +103,31 @@ public class TuneWheel extends View {
 		notifyValueChange();
 	}
 	
+	public int getTopValue(){
+		return mTopValue;
+	}
+	
+	public int getBottomValue(){
+		return mValue;
+	}
+	
+	public int getLineGap(){
+		return mLineDivider;
+	}
+
 	/**
 	 * 标志物需要移动到的位置
+	 * 
 	 * @param year
 	 * @param month
 	 * @param day
 	 */
-	public void setMoveDestination(int year,int month,int day){
+	public void setMoveDestination(int year, int month, int day) {
 		mMoveMark = true;
-		mMarkMoveLenth = Math.round(((year - mTopValue)*12 + (month - mValue) + day/30.0 + 0.5)*mLineDivider);
-		Log.e("setMoveDestination", "mMarkMoveLenth:"+mMarkMoveLenth);
+		mMarkMoveLenth = Math.round(((year - mTopValue) * 12 + (month - mValue)
+				+ day / 30.0 + 0.5)
+				* mLineDivider);
+		Log.e("setMoveDestination", "mMarkMoveLenth:" + mMarkMoveLenth);
 		postInvalidate();
 		mLastX = 0;
 		mMove = 0;
@@ -147,28 +158,28 @@ public class TuneWheel extends View {
 		drawMarkLine(canvas);
 		drawMarker(canvas);
 	}
-	
-	private void drawMarker(Canvas canvas){
-		if(mMoveMark){
+
+	private void drawMarker(Canvas canvas) {
+		if (mMoveMark) {
 			int len = 0;
 			int i = 0;
-			while(len <= Math.abs(mMarkMoveLenth)){
+			while (len <= Math.abs(mMarkMoveLenth)) {
 				canvas.drawColor(Color.TRANSPARENT);
-				if(mMarkMoveLenth >= 0){
+				if (mMarkMoveLenth >= 0) {
 					canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
 					len += 20;
-				}else{
+				} else {
 					canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
-					len = mWidth - 20*i;
+					len = mWidth - 20 * i;
 				}
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				
+
 			}
-		}else{
+		} else {
 			canvas.drawBitmap(mDrawBitamp, mBitmapMove, 0, new Paint());
 		}
 	}
@@ -225,7 +236,6 @@ public class TuneWheel extends View {
 		canvas.restore();
 	}
 
-	
 	private void drawMarkLine(Canvas canvas) {
 
 		canvas.save();
