@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.text.Layout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
@@ -16,7 +15,6 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.animation.TranslateAnimation;
 import android.widget.Scroller;
 
 @SuppressLint("ClickableViewAccessibility")
@@ -26,19 +24,12 @@ public class TuneWheel extends View {
 		public void onValueChange(int year, int month);
 	}
 
-	public static final int MOD_TYPE_HALF = 2;
-	public static final int MOD_TYPE_ONE = 10;
-
-	private static final int ITEM_HALF_DIVIDER = 40;
-	private static final int ITEM_ONE_DIVIDER = 10;
-
 	private static final int ITEM_MAX_HEIGHT = 50;
 
 	private static final int TEXT_SIZE = 18;
 
 	private float mDensity;
-	private int mValue = 1, mMaxValue = 12, mModType = MOD_TYPE_HALF,
-			mLineDivider = ITEM_HALF_DIVIDER;
+	public int mValue = 1, mMaxValue = 12, mLineDivider;
 
 	private int mLastX, mMove;
 	private int mWidth, mHeight;
@@ -49,7 +40,7 @@ public class TuneWheel extends View {
 
 	private OnValueChangeListener mListener;
 
-	private int mTopValue = 2015;
+	public int mTopValue = 2015;
 
 	private int mMaxTop = mTopValue + 2;
 
@@ -59,17 +50,13 @@ public class TuneWheel extends View {
 
 	private Bitmap mDrawBitamp;
 
-	private int mBitmapMove;
+	public float mBitmapMove;
 
 	private boolean mIsLeftEdge;
 
 	private boolean mIsRightEdge;
 
-	private Rect normal = new Rect();
-
-	private float mMarkMoveLenth;
-
-	private boolean mMoveMark;
+	private boolean mIsDrawMark;
 
 	@SuppressWarnings("deprecation")
 	public TuneWheel(Context context, AttributeSet attrs) {
@@ -102,35 +89,16 @@ public class TuneWheel extends View {
 		mMove = 0;
 		notifyValueChange();
 	}
-	
-	public int getTopValue(){
-		return mTopValue;
-	}
-	
-	public int getBottomValue(){
-		return mValue;
-	}
-	
-	public int getLineGap(){
-		return mLineDivider;
-	}
 
 	/**
-	 * 标志物需要移动到的位置
+	 * 是否要draw标记的mark
 	 * 
-	 * @param year
-	 * @param month
-	 * @param day
+	 * @param isDraw
 	 */
-	public void setMoveDestination(int year, int month, int day) {
-		mMoveMark = true;
-		mMarkMoveLenth = Math.round(((year - mTopValue) * 12 + (month - mValue)
-				+ day / 30.0 + 0.5)
-				* mLineDivider);
-		Log.e("setMoveDestination", "mMarkMoveLenth:" + mMarkMoveLenth);
+	public void whetherDrawMark(boolean isDraw, float startPosition) {
+		mIsDrawMark = isDraw;
+		mBitmapMove = startPosition;
 		postInvalidate();
-		mLastX = 0;
-		mMove = 0;
 	}
 
 	/**
@@ -156,30 +124,7 @@ public class TuneWheel extends View {
 		super.onDraw(canvas);
 		drawScaleLine(canvas);
 		drawMarkLine(canvas);
-		drawMarker(canvas);
-	}
-
-	private void drawMarker(Canvas canvas) {
-		if (mMoveMark) {
-			int len = 0;
-			int i = 0;
-			while (len <= Math.abs(mMarkMoveLenth)) {
-				canvas.drawColor(Color.TRANSPARENT);
-				if (mMarkMoveLenth >= 0) {
-					canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
-					len += 20;
-				} else {
-					canvas.drawBitmap(mDrawBitamp, len, 0, new Paint());
-					len = mWidth - 20 * i;
-				}
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-
-			}
-		} else {
+		if (mIsDrawMark) {
 			canvas.drawBitmap(mDrawBitamp, mBitmapMove, 0, new Paint());
 		}
 	}
@@ -289,39 +234,12 @@ public class TuneWheel extends View {
 			countMoveEnd();
 			countVelocityTracker(event);
 			return false;
-			// break;
 		default:
 			break;
 		}
 
 		mLastX = xPosition;
 		return true;
-	}
-
-	/**
-	 * 从边缘的位置拖拽
-	 * 
-	 * @param preX
-	 * @param currentX
-	 */
-	private void pullToEdge(int preX, int currentX) {
-		int deltay = (preX - currentX) / 4;
-		if (normal.isEmpty()) {
-			normal.set(getLeft(), getTop(), getRight(), getBottom());
-		}
-		layout(getLeft() - deltay, getTop(), getRight() - deltay, getBottom());
-	}
-
-	/**
-	 * 回弹时候的动画
-	 */
-	private void reBackAnimation() {
-		TranslateAnimation ta = new TranslateAnimation(0, 0, getTop(),
-				normal.top);
-		ta.setDuration(200);
-		startAnimation(ta);
-		layout(normal.left, normal.top, normal.right, normal.bottom);
-		normal.setEmpty();
 	}
 
 	private void countVelocityTracker(MotionEvent event) {
@@ -430,10 +348,6 @@ public class TuneWheel extends View {
 		super.computeScroll();
 		if (mScroller.computeScrollOffset()) {
 			if (mScroller.getCurrX() == mScroller.getFinalX()) { // over
-				// if (mIsEdge) {
-				// mIsEdge = false;
-				// return;
-				// }
 				countMoveEnd();
 			} else {
 				int xPosition = mScroller.getCurrX();

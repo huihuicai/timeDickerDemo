@@ -6,6 +6,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -41,6 +43,8 @@ public class DefineWheel extends FrameLayout {
 	 */
 	private ImageView mMoveMarkView;
 
+	private float mMarkMarginLeft;
+
 	public DefineWheel(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init(context, attrs);
@@ -55,7 +59,7 @@ public class DefineWheel extends FrameLayout {
 	private void init(Context context, AttributeSet attrs) {
 		mTimeShaft = new TuneWheel(getContext(), attrs);
 		addView(mTimeShaft, params);
-		
+
 		mMoveMarkView = new ImageView(context);
 		mMoveMarkView.setImageResource(R.drawable.car);
 		addView(mMoveMarkView, markParams);
@@ -86,33 +90,59 @@ public class DefineWheel extends FrameLayout {
 	 * @param start
 	 * @param end
 	 */
-	private void startMove(int start, int end) {
+	private void startMove(float start, float end) {
 		// 1.时间轴要重绘,将moveView显示出来
 		// 2.moveView开始执行动画
-		mTimeShaft.postInvalidate();
+		mMoveMarkView.clearAnimation();
 		mMoveMarkView.setVisibility(View.VISIBLE);
+		mTimeShaft.whetherDrawMark(false, mMarkMarginLeft);
 		TranslateAnimation animation = new TranslateAnimation(start, end, 0, 0);
 		animation.setFillAfter(true);
 		animation.setDuration(500);
 		animation.setInterpolator(new AccelerateDecelerateInterpolator());
-		mMoveMarkView.startAnimation(getAnimation());
+		animation.setAnimationListener(new AnimationListener() {
+			@Override
+			public void onAnimationStart(Animation animation) {
+			}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+			}
+
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				mMoveMarkView.clearAnimation();
+				mMoveMarkView.setVisibility(View.GONE);
+				mTimeShaft.whetherDrawMark(true, mMarkMarginLeft);
+			}
+		});
+		mMoveMarkView.startAnimation(animation);
 	}
+
 	/**
 	 * 初始化时间轴上
+	 * 
 	 * @param year
 	 * @param month
 	 */
-	public void initTimeShaft(int year,int month){
+	public void initTimeShaft(int year, int month) {
 		mTimeShaft.initViewParam(year, month);
-	} 
+	}
+
 	/**
-	 * 移动标志物
+	 * 移动标志物最终需要停止的位置
+	 * 
 	 * @param year
 	 * @param month
 	 * @param day
 	 */
-	private void moveMark(int year,int month,int day){
-		
+	public void setMarkPosition(int year, int month, int day) {
+		float len = Math.round(((year - mTimeShaft.mTopValue) * 12
+				+ (month - mTimeShaft.mValue) + day / 30.0)
+				* mTimeShaft.mLineDivider);
+		mMarkMarginLeft = mTimeShaft.mBitmapMove;
+		startMove(mMarkMarginLeft, len);
+		mMarkMarginLeft = len;
 	}
-	
+
 }
