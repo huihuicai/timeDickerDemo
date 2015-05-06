@@ -23,20 +23,40 @@ public class TuneWheel extends View {
 	public interface OnValueChangeListener {
 		public void onValueChange(int year, int month);
 	}
-
-	private static final int ITEM_MAX_HEIGHT = 50;
-
-	private static final int TEXT_SIZE = 18;
-
+	/**
+	 * 滑动辅助
+	 */
+	private Scroller mScroller;
+	/**
+	 * 速度跟踪
+	 */
+	private VelocityTracker mVelocityTracker;
+	/**
+	 * 刻度的高度(dp)
+	 */
+	private int mItemHeight;
+	/**
+	 * 刻度值的高度(dp)
+	 */
+	private int mTextHeight;
+	/**
+	 * 像素密度
+	 */
 	private float mDensity;
-	public int mValue = 1, mMaxValue = 12, mLineDivider;
 
 	private int mLastX, mMove;
-	private int mWidth, mHeight;
-
+	/**
+	 * 屏幕的宽度
+	 */
+	private int mWidth;
+	/**
+	 * 刻度间隔值
+	 */
+	public int mLineDivider;
+	/**
+	 * 最小速度
+	 */
 	private int mMinVelocity;
-	private Scroller mScroller;
-	private VelocityTracker mVelocityTracker;
 
 	private OnValueChangeListener mListener;
 
@@ -45,6 +65,12 @@ public class TuneWheel extends View {
 	private int mMaxTop = mTopValue + 2;
 
 	private int mMinTop = mTopValue - 2;
+
+	private int mMaxValue = 12;
+
+	private int mMinValue = 1;
+
+	public int mValue = 1;
 
 	private int mDrawValue = mTopValue;
 
@@ -67,6 +93,9 @@ public class TuneWheel extends View {
 
 		mMinVelocity = ViewConfiguration.get(getContext())
 				.getScaledMinimumFlingVelocity();
+
+		mItemHeight = (int) (mDensity * 18);
+		mTextHeight = (int) (mDensity * 16);
 
 		mDrawBitamp = BitmapFactory.decodeResource(getResources(),
 				R.drawable.car);
@@ -114,7 +143,6 @@ public class TuneWheel extends View {
 	protected void onLayout(boolean changed, int left, int top, int right,
 			int bottom) {
 		mWidth = getWidth();
-		mHeight = getHeight();
 		mLineDivider = (int) (mWidth / 12.5);
 		super.onLayout(changed, left, top, right, bottom);
 	}
@@ -122,7 +150,7 @@ public class TuneWheel extends View {
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
-		drawScaleLine(canvas);
+		drawNumberAndLine(canvas);
 		drawMarkLine(canvas);
 		if (mIsDrawMark) {
 			canvas.drawBitmap(mDrawBitamp, mBitmapMove, 0, new Paint());
@@ -134,7 +162,7 @@ public class TuneWheel extends View {
 	 * 
 	 * @param canvas
 	 */
-	private void drawScaleLine(Canvas canvas) {
+	private void drawNumberAndLine(Canvas canvas) {
 		canvas.save();
 
 		Paint linePaint = new Paint();
@@ -142,16 +170,15 @@ public class TuneWheel extends View {
 		linePaint.setColor(Color.BLACK);
 
 		TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-		textPaint.setTextSize(TEXT_SIZE * mDensity);
+		textPaint.setTextSize(mTextHeight);
 
-		canvas.drawLine(0, 50, mWidth, 50, linePaint);
+		canvas.drawLine(0, mItemHeight, mWidth, mItemHeight, linePaint);
 
 		int width = mWidth, drawCount = 0;
 		float xPosition = 0, textWidth = Layout.getDesiredWidth("0", textPaint);
 
-		int drawNumber = 1;
+		int drawNumber = 1, numSize;
 		for (int i = 0; drawCount <= width; i++) {
-			int numSize = String.valueOf(mValue + i).length();
 
 			xPosition = (float) (-mMove + (i + 0.5) * mLineDivider);
 
@@ -161,19 +188,20 @@ public class TuneWheel extends View {
 				drawNumber = mValue + i - mMaxValue;
 			}
 
+			numSize = String.valueOf(drawNumber).length();
+
 			if (drawNumber == 1) {
-				canvas.drawLine(xPosition, getPaddingTop(), xPosition, mDensity
-						* ITEM_MAX_HEIGHT, linePaint);
+				canvas.drawLine(xPosition, getPaddingTop(), xPosition,
+						2 * mItemHeight, linePaint);
 				canvas.drawText(String.valueOf(mDrawValue), xPosition, 30,
 						textPaint);
 			} else {
-				canvas.drawLine(xPosition, getPaddingTop() + 50, xPosition,
-						mDensity * ITEM_MAX_HEIGHT, linePaint);
+				canvas.drawLine(xPosition, getPaddingTop() + mItemHeight,
+						xPosition, 2 * mItemHeight, linePaint);
 			}
 
 			canvas.drawText(String.valueOf(drawNumber), xPosition
-					- (textWidth * numSize / 2), getHeight() - textWidth,
-					textPaint);
+					- (textWidth * numSize / 2), 3 * mItemHeight, textPaint);
 
 			drawCount += mLineDivider;
 		}
@@ -189,7 +217,7 @@ public class TuneWheel extends View {
 		redPaint.setStrokeWidth(4);
 		redPaint.setColor(Color.BLACK);
 		canvas.drawLine((float) (0.5 * mLineDivider), 0,
-				(float) (0.5 * mLineDivider), 50, redPaint);
+				(float) (0.5 * mLineDivider), mItemHeight, redPaint);
 
 		canvas.restore();
 	}
@@ -259,13 +287,13 @@ public class TuneWheel extends View {
 		if (Math.abs(tValue) > 0) {
 			mValue += tValue;
 			mMove -= tValue * mLineDivider;
-			if (mValue <= 1) {
-				if (mValue == 1) {
+			if (mValue <= mMinValue) {
+				if (mValue == mMinValue) {
 					mBitmapMove += mLineDivider;
 				}
 				Log.e("changeMoveAndValue", "mValue的值下于1了,tValue:" + tValue);
 				if (mTopValue == mMinTop) {
-					mValue = 1;
+					mValue = mMinValue;
 					mDrawValue = mMinTop;
 					mTopValue = mMinTop;
 					mIsLeftEdge = true;
@@ -276,7 +304,7 @@ public class TuneWheel extends View {
 
 				}
 			} else if (mValue > mMaxValue) {
-				mValue = 1;
+				mValue = mMinValue;
 				if (mTopValue >= mMaxTop - 1) {
 					mDrawValue = mMaxTop;
 					mTopValue = mMaxTop;
@@ -307,19 +335,19 @@ public class TuneWheel extends View {
 		int roundMove = Math.round(mMove / ((float) 1.0 * mLineDivider));
 		mValue = mValue + roundMove;
 		mBitmapMove += mMove % mLineDivider;
-		if (mValue < 1) {
+		if (mValue < mMinValue) {
 			if (mTopValue == mMinTop) {
 				mIsLeftEdge = true;
 				mDrawValue = mMinTop;
 				mTopValue = mMinTop;
-				mValue = 1;
+				mValue = mMinValue;
 			} else {
 				mValue = mMaxValue;
 				mDrawValue = mTopValue;
 				mTopValue -= 1;
 			}
 		} else if (mValue > mMaxValue) {
-			mValue = 1;
+			mValue = mMinValue;
 			if (mTopValue == mMaxTop - 1) {
 				mIsRightEdge = true;
 				mDrawValue = mMaxTop;
