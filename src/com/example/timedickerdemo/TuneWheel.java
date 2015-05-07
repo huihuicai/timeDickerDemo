@@ -23,6 +23,13 @@ public class TuneWheel extends View {
 	public interface OnValueChangeListener {
 		public void onValueChange(int year, int month);
 	}
+
+	private Paint mLinePaint;
+	private TextPaint mTextPaint;
+	/**
+	 * 数值发生变化的监听器
+	 */
+	private OnValueChangeListener mListener;
 	/**
 	 * 滑动辅助
 	 */
@@ -43,8 +50,14 @@ public class TuneWheel extends View {
 	 * 像素密度
 	 */
 	private float mDensity;
-
-	private int mLastX, mMove;
+	/**
+	 * 上一次滑动的距离
+	 */
+	private int mLastX;
+	/**
+	 * move事件的时候滑动距离
+	 */
+	private int mMove;
 	/**
 	 * 屏幕的宽度
 	 */
@@ -57,31 +70,53 @@ public class TuneWheel extends View {
 	 * 最小速度
 	 */
 	private int mMinVelocity;
-
-	private OnValueChangeListener mListener;
-
+	/**
+	 * 时间轴上部的值(年)
+	 */
 	public int mTopValue = 2015;
-
+	/**
+	 * 时间轴上部的最大值(年)
+	 */
 	private int mMaxTop = mTopValue + 2;
-
+	/**
+	 * 时间轴上部的最小值(年)
+	 */
 	private int mMinTop = mTopValue - 2;
-
+	/**
+	 * 时间轴下部的最大值(月)
+	 */
 	private int mMaxValue = 12;
-
+	/**
+	 * 时间轴下部的最大值(月)
+	 */
 	private int mMinValue = 1;
-
+	/**
+	 * 时间轴下部的值(月)
+	 */
 	public int mValue = 1;
-
+	/**
+	 * 需要在时间轴的上部draw的值
+	 */
 	private int mDrawValue = mTopValue;
-
+	/**
+	 * 需要draw的bitmap(时间轴上的小车)
+	 */
 	private Bitmap mDrawBitamp;
-
+	/**
+	 * 时间轴上的标志物(小车)在move事件时的移动距离
+	 */
 	public float mBitmapMove;
-
+	/**
+	 * 是否到了左边界
+	 */
 	private boolean mIsLeftEdge;
-
+	/**
+	 * 是否到了右边界
+	 */
 	private boolean mIsRightEdge;
-
+	/**
+	 * 是否要draw标志物(小车)
+	 */
 	private boolean mIsDrawMark;
 
 	@SuppressWarnings("deprecation")
@@ -100,6 +135,7 @@ public class TuneWheel extends View {
 		mDrawBitamp = BitmapFactory.decodeResource(getResources(),
 				R.drawable.car);
 
+		initPaint();
 	}
 
 	public void initViewParam(int year, int month) {
@@ -157,6 +193,15 @@ public class TuneWheel extends View {
 		}
 	}
 
+	private void initPaint() {
+		mLinePaint = new Paint();
+		mLinePaint.setStrokeWidth(2);
+		mLinePaint.setColor(Color.BLACK);
+
+		mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+		mTextPaint.setTextSize(mTextHeight);
+	}
+
 	/**
 	 * 画出刻度线和对应的数字
 	 * 
@@ -165,17 +210,11 @@ public class TuneWheel extends View {
 	private void drawNumberAndLine(Canvas canvas) {
 		canvas.save();
 
-		Paint linePaint = new Paint();
-		linePaint.setStrokeWidth(2);
-		linePaint.setColor(Color.BLACK);
-
-		TextPaint textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-		textPaint.setTextSize(mTextHeight);
-
-		canvas.drawLine(0, mItemHeight, mWidth, mItemHeight, linePaint);
+		canvas.drawLine(0, mItemHeight, mWidth, mItemHeight, mLinePaint);
 
 		int width = mWidth, drawCount = 0;
-		float xPosition = 0, textWidth = Layout.getDesiredWidth("0", textPaint);
+		float xPosition = 0, textWidth = Layout
+				.getDesiredWidth("0", mTextPaint);
 
 		int drawNumber = 1, numSize;
 		for (int i = 0; drawCount <= width; i++) {
@@ -192,16 +231,16 @@ public class TuneWheel extends View {
 
 			if (drawNumber == 1) {
 				canvas.drawLine(xPosition, getPaddingTop(), xPosition,
-						2 * mItemHeight, linePaint);
+						2 * mItemHeight, mLinePaint);
 				canvas.drawText(String.valueOf(mDrawValue), xPosition, 30,
-						textPaint);
+						mTextPaint);
 			} else {
 				canvas.drawLine(xPosition, getPaddingTop() + mItemHeight,
-						xPosition, 2 * mItemHeight, linePaint);
+						xPosition, 2 * mItemHeight, mLinePaint);
 			}
 
 			canvas.drawText(String.valueOf(drawNumber), xPosition
-					- (textWidth * numSize / 2), 3 * mItemHeight, textPaint);
+					- (textWidth * numSize / 2), 3 * mItemHeight, mTextPaint);
 
 			drawCount += mLineDivider;
 		}
@@ -213,11 +252,8 @@ public class TuneWheel extends View {
 
 		canvas.save();
 
-		Paint redPaint = new Paint();
-		redPaint.setStrokeWidth(4);
-		redPaint.setColor(Color.BLACK);
 		canvas.drawLine((float) (0.5 * mLineDivider), 0,
-				(float) (0.5 * mLineDivider), mItemHeight, redPaint);
+				(float) (0.5 * mLineDivider), mItemHeight, mLinePaint);
 
 		canvas.restore();
 	}
@@ -259,7 +295,7 @@ public class TuneWheel extends View {
 			break;
 		case MotionEvent.ACTION_UP:
 		case MotionEvent.ACTION_CANCEL:
-			countMoveEnd();
+			calculateMoveEnd();
 			countVelocityTracker(event);
 			return false;
 		default:
@@ -331,7 +367,7 @@ public class TuneWheel extends View {
 	/**
 	 * 结束的时候，计算相应的value值
 	 */
-	private void countMoveEnd() {
+	private void calculateMoveEnd() {
 		int roundMove = Math.round(mMove / ((float) 1.0 * mLineDivider));
 		mValue = mValue + roundMove;
 		mBitmapMove += mMove % mLineDivider;
@@ -376,7 +412,7 @@ public class TuneWheel extends View {
 		super.computeScroll();
 		if (mScroller.computeScrollOffset()) {
 			if (mScroller.getCurrX() == mScroller.getFinalX()) { // over
-				countMoveEnd();
+				calculateMoveEnd();
 			} else {
 				int xPosition = mScroller.getCurrX();
 				mMove += (mLastX - xPosition);
