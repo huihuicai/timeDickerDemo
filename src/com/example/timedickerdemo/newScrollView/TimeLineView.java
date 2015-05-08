@@ -117,7 +117,7 @@ public class TimeLineView extends FrameLayout {
 				int scrollX = mHorizontalScrollView.getScrollX();
 				int deltay = (int) (scrollX / mLineGap);
 				mDeltayValue = Math.abs(scrollX % mLineGap);
-				mTopValue = deltay / 12 + 2013;
+				mTopValue = deltay / 12 + mMinTop;
 				mBottomValue = deltay % 12 + 1;
 
 				if (isStop) {
