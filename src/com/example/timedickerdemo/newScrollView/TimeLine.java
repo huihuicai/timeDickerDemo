@@ -12,7 +12,7 @@ import android.view.View;
 
 public class TimeLine extends View {
 
-	private float mLineGap;
+	private int mLineGap;
 	private float mDensity;
 	private int mWidth;
 	private int mTopValue;
@@ -22,7 +22,7 @@ public class TimeLine extends View {
 		super(context, attrs);
 		mDensity = getContext().getResources().getDisplayMetrics().density;
 		mWidth = getContext().getResources().getDisplayMetrics().widthPixels;
-		mLineGap = (float) (mWidth / 12.5);
+		mLineGap = (int) (mWidth / 12.5);
 	}
 	
 	public void setCurrentTopValue(int topValue){

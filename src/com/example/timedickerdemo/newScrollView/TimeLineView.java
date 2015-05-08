@@ -1,12 +1,13 @@
 package com.example.timedickerdemo.newScrollView;
 
+import java.util.Calendar;
+
 import com.example.timedickerdemo.R;
 import com.example.timedickerdemo.newScrollView.MyHorizontalScrollView.StopListenter;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
+import android.text.format.Time;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,9 +32,10 @@ public class TimeLineView extends FrameLayout {
 
 	private int mScreenWidth;
 	private int mLineGap;
-	private int mMarkLeft;
+	private int mHalfLineGap;
 
 	private int mTopValue;
+	private int mMinTop;
 	private int mBottomValue;
 	private int mDeltayValue;
 	private float mMarkMoveLenth;
@@ -42,6 +44,8 @@ public class TimeLineView extends FrameLayout {
 	private int mYear = 2013;
 	private int mMonth = 1;
 	private int mDay = 1;
+
+	private int deltaGap = 0;
 
 	private LinearLayout.LayoutParams normalLayoutParams;
 	private LinearLayout.LayoutParams bigLayoutParams;
@@ -52,37 +56,54 @@ public class TimeLineView extends FrameLayout {
 
 	public TimeLineView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+
 		mScreenWidth = getContext().getResources().getDisplayMetrics().widthPixels;
 		mLineGap = (int) (mScreenWidth / 12.5);
-		mMarkLeft = (int) (0.5 * mLineGap);
+		mHalfLineGap = (int) (0.5 * mLineGap);
+
+		deltaGap = mScreenWidth - 12 * mLineGap - mHalfLineGap;
+
 		normalLayoutParams = new LinearLayout.LayoutParams(mScreenWidth
-				- mMarkLeft, LinearLayout.LayoutParams.WRAP_CONTENT);
+				- mHalfLineGap - deltaGap,
+				LinearLayout.LayoutParams.WRAP_CONTENT);
 
 		bigLayoutParams = new LinearLayout.LayoutParams(mScreenWidth,
 				LinearLayout.LayoutParams.WRAP_CONTENT);
-		init(context);
+		initTime();
+		initWidget(context);
 	}
 
-	public TimeLineView(Context context, AttributeSet attrs, int defStyleAttr) {
-		super(context, attrs, defStyleAttr);
+	/**
+	 * 初始化时间轴的各个值
+	 */
+	private void initTime() {
+		Time time = new Time("GTM+8");
+		time.setToNow();
+		mTopValue = time.year;
+		mBottomValue = time.month + 1;
+		mMinTop = mTopValue - 2;
 	}
 
-	private void init(Context context) {
+	/**
+	 * 初始化组件
+	 * @param context
+	 */
+	private void initWidget(Context context) {
 		LayoutInflater.from(context).inflate(R.layout.time_line_view, this,
 				true);
-		
+
 		mMarkView = new View(context);
 		mMarkView.setBackgroundColor(Color.BLACK);
-		FrameLayout.LayoutParams layoutParams = new LayoutParams(2, 32);
-		layoutParams.leftMargin = mMarkLeft;
+		FrameLayout.LayoutParams layoutParams = new LayoutParams(2, 45);
+		layoutParams.leftMargin = mHalfLineGap;
 		addView(mMarkView, layoutParams);
-		
+
 		mMoveMark = (ImageView) findViewById(R.id.move_mark);
 		mHorizontalScrollView = (MyHorizontalScrollView) findViewById(R.id.time_line_scroll);
 		mContainer = (LinearLayout) findViewById(R.id.time_line_container);
 		for (int i = 0; i < 5; i++) {
 			TimeLine timeLine = new TimeLine(context, null);
-			timeLine.setCurrentTopValue(2015 + i - 2);
+			timeLine.setCurrentTopValue(mTopValue + i - 2);
 			if (i < 4) {
 				mContainer.addView(timeLine, normalLayoutParams);
 			} else {
@@ -93,18 +114,14 @@ public class TimeLineView extends FrameLayout {
 		mHorizontalScrollView.setStopListener(new StopListenter() {
 			@Override
 			public void stop(boolean isStop) {
-				// TODO 处理停止后的事件处理
 				int scrollX = mHorizontalScrollView.getScrollX();
 				int deltay = (int) (scrollX / mLineGap);
 				mDeltayValue = Math.abs(scrollX % mLineGap);
 				mTopValue = deltay / 12 + 2013;
 				mBottomValue = deltay % 12 + 1;
-				Log.e("stop===", "year:" + mTopValue + "    month:"
-						+ mBottomValue + "   scrollX:" + scrollX);
 
 				if (isStop) {
-					Log.e("mHorizontalScrollView", "已经停止了");
-					handleStop();
+					handleStop(scrollX);
 				}
 
 				if (mOnValueChangeListener != null) {
@@ -115,28 +132,20 @@ public class TimeLineView extends FrameLayout {
 		});
 	}
 
-	public void setOnValueChangeListener(OnValueChangeListener1 changeListener) {
-		mOnValueChangeListener = changeListener;
-	}
-
-	private void handleStop() {
-		// TODO 计算当前的值，如果不是正好的位置，那就要回弹到一个最近位置
+	/**
+	 * 停止滑动的时候，有可能不是在整个刻度，需要回弹到整刻度
+	 */
+	private void handleStop(int deltaX) {
 		if (mDeltayValue == 0) {
 			return;
 		}
-		int delta = mDeltayValue - Math.round((float) (mLineGap / 2.0));
-		Log.e("handleStop",
-				"delta:" + delta + "   mDeltayValue:" + mDeltayValue
-						+ "   mLineGap/2.0: "
-						+ Math.round((float) (mLineGap / 2.0)));
-		if (delta > 0) {
+		int delta = -mDeltayValue;
+		if (mDeltayValue >= mHalfLineGap) {
 			mBottomValue += 1;
-		} else {
-			delta = -mDeltayValue;
+			delta = mLineGap - mDeltayValue;
 		}
 
 		mHorizontalScrollView.smoothScrollBy(delta, 0);
-
 	}
 
 	/**
@@ -173,6 +182,10 @@ public class TimeLineView extends FrameLayout {
 		mDay = day;
 
 		mMarkLenth += mMarkMoveLenth;
+	}
+
+	public void setOnValueChangeListener(OnValueChangeListener1 changeListener) {
+		mOnValueChangeListener = changeListener;
 	}
 
 }
