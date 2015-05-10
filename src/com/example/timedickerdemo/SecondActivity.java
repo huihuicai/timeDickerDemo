@@ -13,11 +13,11 @@ import android.widget.TextView;
 
 public class SecondActivity extends Activity {
 
-	private TextView mValue, mChange, mData;
+	private TextView mValue, mChange, mData,mBack,mMOvePosition;
 	private TimeLineView mLineView;
 	private DefineWheel mDefineWheel;
 	
-	private int count = 0 ;
+	private int count = 0 ,number = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +51,6 @@ public class SecondActivity extends Activity {
 		mChange.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-//				mDefineWheel.setMarkPosition(2015, 7, 25);
 				switch (count) {
 				case 0:
 					mDefineWheel.setMarkPosition(2015, 8, 25);
@@ -80,6 +79,54 @@ public class SecondActivity extends Activity {
 				case 6:
 					mDefineWheel.setMarkPosition(2015, 3, 25);
 					count = 0;
+					break;
+
+				default:
+					break;
+				}
+			}
+		});
+		
+		mBack = (TextView) findViewById(R.id.back);
+		mBack.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mLineView.scrollTimerShaftBack();
+			}
+		});
+		
+		mMOvePosition = (TextView) findViewById(R.id.change_position);
+		mMOvePosition.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				switch (number) {
+				case 0:
+					mLineView.setMarkDestion(2015, 8, 25);
+					number ++;
+					break;
+				case 1:
+					mLineView.setMarkDestion(2015, 9, 25);
+					number ++;
+					break;
+				case 2:
+					mLineView.setMarkDestion(2015, 10, 25);
+					number ++;
+					break;
+				case 3:
+					mLineView.setMarkDestion(2015, 11, 25);
+					number ++;
+					break;
+				case 4:
+					mLineView.setMarkDestion(2015, 12, 25);
+					number ++;
+					break;
+				case 5:
+					mLineView.setMarkDestion(2015, 4, 25);
+					number ++;
+					break;
+				case 6:
+					mLineView.setMarkDestion(2015, 3, 25);
+					number = 0;
 					break;
 
 				default:

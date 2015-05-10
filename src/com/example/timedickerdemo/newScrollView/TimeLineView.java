@@ -1,10 +1,9 @@
 package com.example.timedickerdemo.newScrollView;
 
-import java.util.Calendar;
-
 import com.example.timedickerdemo.R;
 import com.example.timedickerdemo.newScrollView.MyHorizontalScrollView.StopListenter;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Color;
 import android.text.format.Time;
@@ -12,7 +11,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,17 +31,12 @@ public class TimeLineView extends FrameLayout {
 	private int mScreenWidth;
 	private int mLineGap;
 	private int mHalfLineGap;
-
-	private int mTopValue;
-	private int mMinTop;
-	private int mBottomValue;
-	private int mDeltayValue;
-	private float mMarkMoveLenth;
-	private float mMarkLenth = 0;
-
-	private int mYear = 2013;
-	private int mMonth = 1;
-	private int mDay = 1;
+	/**
+	 * 当前的时间值
+	 */
+	private int mCurrentYear;
+	private int mCurrentMonth;
+	private int mMinYear;
 
 	private int deltaGap = 0;
 
@@ -79,13 +72,15 @@ public class TimeLineView extends FrameLayout {
 	private void initTime() {
 		Time time = new Time("GTM+8");
 		time.setToNow();
-		mTopValue = time.year;
-		mBottomValue = time.month + 1;
-		mMinTop = mTopValue - 2;
+		mCurrentYear = time.year;
+		mCurrentMonth = time.month + 1;
+		mMinYear = mCurrentYear - 2;
+
 	}
 
 	/**
 	 * 初始化组件
+	 * 
 	 * @param context
 	 */
 	private void initWidget(Context context) {
@@ -103,7 +98,7 @@ public class TimeLineView extends FrameLayout {
 		mContainer = (LinearLayout) findViewById(R.id.time_line_container);
 		for (int i = 0; i < 5; i++) {
 			TimeLine timeLine = new TimeLine(context, null);
-			timeLine.setCurrentTopValue(mTopValue + i - 2);
+			timeLine.setCurrentTopValue(mCurrentYear + i - 2);
 			if (i < 4) {
 				mContainer.addView(timeLine, normalLayoutParams);
 			} else {
@@ -116,18 +111,25 @@ public class TimeLineView extends FrameLayout {
 			public void stop(boolean isStop) {
 				int scrollX = mHorizontalScrollView.getScrollX();
 				int deltay = (int) (scrollX / mLineGap);
-				mDeltayValue = Math.abs(scrollX % mLineGap);
-				mTopValue = deltay / 12 + mMinTop;
-				mBottomValue = deltay % 12 + 1;
+				int deltayValue = Math.abs(scrollX % mLineGap);
+				mCurrentYear = deltay / 12 + mMinYear;
+				mCurrentMonth = deltay % 12 + 1;
 
 				if (isStop) {
-					handleStop(scrollX);
+					handleStop(deltayValue);
 				}
 
 				if (mOnValueChangeListener != null) {
-					mOnValueChangeListener.oonValueChanged(isStop, mTopValue,
-							mBottomValue);
+					mOnValueChangeListener.oonValueChanged(isStop,
+							mCurrentYear, mCurrentMonth);
 				}
+			}
+		});
+
+		post(new Runnable() {
+			@Override
+			public void run() {
+				scrollTimerShaftBack();
 			}
 		});
 	}
@@ -135,17 +137,31 @@ public class TimeLineView extends FrameLayout {
 	/**
 	 * 停止滑动的时候，有可能不是在整个刻度，需要回弹到整刻度
 	 */
-	private void handleStop(int deltaX) {
-		if (mDeltayValue == 0) {
+	private void handleStop(int deltaDay) {
+		if (deltaDay == 0) {
 			return;
 		}
-		int delta = -mDeltayValue;
-		if (mDeltayValue >= mHalfLineGap) {
-			mBottomValue += 1;
-			delta = mLineGap - mDeltayValue;
+		int deltaMove = -deltaDay;
+		if (deltaDay >= mHalfLineGap) {
+			mCurrentMonth += 1;
+			deltaMove = mLineGap - deltaDay;
 		}
+		mHorizontalScrollView.smoothScrollBy(deltaMove, 0);
+	}
 
-		mHorizontalScrollView.smoothScrollBy(delta, 0);
+	/**
+	 * 滑动是时间轴到指定的位置
+	 */
+	public void scrollTimerShaftBack() {
+		// 1.当前的值的月份 2.计算出其距离，然后smoothScroll指定的距离
+		Time time = new Time("GTM+8");
+		time.setToNow();
+		int year = time.year;
+		int month = time.month + 1;
+		int lenth = (12 * (year - mMinYear) + month - 1) * mLineGap;
+		Log.e("scroll", "移动的距离：" + lenth + "    月份："
+				+ (12 * (year - mMinYear) + month - 1));
+		mHorizontalScrollView.smoothScrollTo(lenth, 0);
 	}
 
 	/**
@@ -156,32 +172,20 @@ public class TimeLineView extends FrameLayout {
 	 * @param day
 	 */
 	public void setMarkDestion(int year, int month, int day) {
-		mMarkMoveLenth = Math
-				.round(((year - mYear) * 12 + (month - mMonth) + (day - mDay) / 30.0)
-						* mLineGap);
-		if (mMarkMoveLenth == 0) {
+		float markMoveLenth = Math
+				.round(((year - mMinYear) * 12 + (month - 1) + day / 30.0)
+						* mLineGap + mHalfLineGap);
+		if (markMoveLenth == 0) {
 			return;
 		}
-		Log.e("setMarkDestion", "year:" + (year - mYear) + "    month:"
-				+ (month - mMonth) + "   距离：" + mMarkMoveLenth);
-		TranslateAnimation animation;
-		if (year >= mYear && month >= mMonth && day >= mDay) {
-			animation = new TranslateAnimation(mMarkLenth, mMarkMoveLenth, 0, 0);
-		} else {
-			animation = new TranslateAnimation(mMarkLenth, -mMarkMoveLenth, 0,
-					0);
-		}
+		Log.e("setMarkDestion", "year:" + year + "    month:" + month
+				+ "   距离：" + markMoveLenth);
 
-		animation.setDuration(1000);
-		animation.setFillAfter(true);
+		mMoveMark.clearAnimation();
 
-		mMoveMark.startAnimation(animation);
-
-		mYear = year;
-		mMonth = month;
-		mDay = day;
-
-		mMarkLenth += mMarkMoveLenth;
+		ObjectAnimator animator = ObjectAnimator.ofFloat(mMoveMark, "x",
+				markMoveLenth);
+		animator.start();
 	}
 
 	public void setOnValueChangeListener(OnValueChangeListener1 changeListener) {
