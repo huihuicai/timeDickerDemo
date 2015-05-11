@@ -1,7 +1,7 @@
 package com.example.timedickerdemo.newScrollView;
 
 import com.example.timedickerdemo.R;
-import com.example.timedickerdemo.newScrollView.MyHorizontalScrollView.StopListenter;
+import com.example.timedickerdemo.newScrollView.HorizontalScrollViewShaft.StopListenter;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
@@ -15,7 +15,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-public class TimeLineView extends FrameLayout {
+public class TimeShaftView extends FrameLayout {
 
 	public interface OnValueChangeListener1 {
 		void oonValueChanged(boolean isSlipStop, int topValue, int bottomValue);
@@ -23,7 +23,7 @@ public class TimeLineView extends FrameLayout {
 
 	private OnValueChangeListener1 mOnValueChangeListener;
 
-	private MyHorizontalScrollView mHorizontalScrollView;
+	private HorizontalScrollViewShaft mHorizontalScrollView;
 	private LinearLayout mContainer;
 	private ImageView mMoveMark;
 	private View mMarkView;
@@ -43,11 +43,11 @@ public class TimeLineView extends FrameLayout {
 	private LinearLayout.LayoutParams normalLayoutParams;
 	private LinearLayout.LayoutParams bigLayoutParams;
 
-	public TimeLineView(Context context) {
+	public TimeShaftView(Context context) {
 		super(context);
 	}
 
-	public TimeLineView(Context context, AttributeSet attrs) {
+	public TimeShaftView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 
 		mScreenWidth = getContext().getResources().getDisplayMetrics().widthPixels;
@@ -94,10 +94,10 @@ public class TimeLineView extends FrameLayout {
 		addView(mMarkView, layoutParams);
 
 		mMoveMark = (ImageView) findViewById(R.id.move_mark);
-		mHorizontalScrollView = (MyHorizontalScrollView) findViewById(R.id.time_line_scroll);
+		mHorizontalScrollView = (HorizontalScrollViewShaft) findViewById(R.id.time_line_scroll);
 		mContainer = (LinearLayout) findViewById(R.id.time_line_container);
 		for (int i = 0; i < 5; i++) {
-			TimeLine timeLine = new TimeLine(context, null);
+			TimeShaftLine timeLine = new TimeShaftLine(context, null);
 			timeLine.setCurrentTopValue(mCurrentYear + i - 2);
 			if (i < 4) {
 				mContainer.addView(timeLine, normalLayoutParams);

@@ -2,11 +2,10 @@ package com.example.timedickerdemo.newScrollView;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.HorizontalScrollView;
 
-public class MyHorizontalScrollView extends HorizontalScrollView {
+public class HorizontalScrollViewShaft extends HorizontalScrollView {
 
 	public interface StopListenter {
 		void stop(boolean isStop);
@@ -17,7 +16,7 @@ public class MyHorizontalScrollView extends HorizontalScrollView {
 	private int mLastX;
 	private int DELAY = 10;
 
-	public MyHorizontalScrollView(Context context, AttributeSet attrs) {
+	public HorizontalScrollViewShaft(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mStopRunnable = new Runnable() {
 			@Override

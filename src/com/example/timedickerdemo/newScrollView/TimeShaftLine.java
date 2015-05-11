@@ -10,7 +10,7 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
 
-public class TimeLine extends View {
+public class TimeShaftLine extends View {
 
 	private int mLineGap;
 	private float mDensity;
@@ -18,7 +18,7 @@ public class TimeLine extends View {
 	private int mTopValue;
 	private final int TEXT_SIZE = 16;
 
-	public TimeLine(Context context, AttributeSet attrs) {
+	public TimeShaftLine(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mDensity = getContext().getResources().getDisplayMetrics().density;
 		mWidth = getContext().getResources().getDisplayMetrics().widthPixels;

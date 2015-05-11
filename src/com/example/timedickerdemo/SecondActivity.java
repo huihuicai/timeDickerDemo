@@ -1,8 +1,8 @@
 package com.example.timedickerdemo;
 
 import com.example.timedickerdemo.DefineWheel.OnDataChangeListener;
-import com.example.timedickerdemo.newScrollView.TimeLineView;
-import com.example.timedickerdemo.newScrollView.TimeLineView.OnValueChangeListener1;
+import com.example.timedickerdemo.newScrollView.TimeShaftView;
+import com.example.timedickerdemo.newScrollView.TimeShaftView.OnValueChangeListener1;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -14,7 +14,7 @@ import android.widget.TextView;
 public class SecondActivity extends Activity {
 
 	private TextView mValue, mChange, mData,mBack,mMOvePosition;
-	private TimeLineView mLineView;
+	private TimeShaftView mLineView;
 	private DefineWheel mDefineWheel;
 	
 	private int count = 0 ,number = 0;
@@ -36,7 +36,7 @@ public class SecondActivity extends Activity {
 		mValue = (TextView) findViewById(R.id.value);
 		mValue.setText(getString(R.string.current_date, 2015, 4));
 
-		mLineView = (TimeLineView) findViewById(R.id.time_view);
+		mLineView = (TimeShaftView) findViewById(R.id.time_view);
 		mLineView.setOnValueChangeListener(new OnValueChangeListener1() {
 
 			@Override
