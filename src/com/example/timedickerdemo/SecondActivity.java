@@ -2,11 +2,10 @@ package com.example.timedickerdemo;
 
 import com.example.timedickerdemo.DefineWheel.OnDataChangeListener;
 import com.example.timedickerdemo.newScrollView.TimeShaftView;
-import com.example.timedickerdemo.newScrollView.TimeShaftView.OnValueChangeListener1;
+import com.example.timedickerdemo.newScrollView.TimeShaftView.OnTimeChangeListener;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -37,7 +36,7 @@ public class SecondActivity extends Activity {
 		mValue.setText(getString(R.string.current_date, 2015, 4));
 
 		mLineView = (TimeShaftView) findViewById(R.id.time_view);
-		mLineView.setOnValueChangeListener(new OnValueChangeListener1() {
+		mLineView.setOnValueChangeListener(new OnTimeChangeListener() {
 
 			@Override
 			public void oonValueChanged(boolean isSlipStop, int topValue,

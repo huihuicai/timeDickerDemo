@@ -17,6 +17,9 @@ public class TimeShaftLine extends View {
 	private int mWidth;
 	private int mTopValue;
 	private final int TEXT_SIZE = 16;
+	private final int LINE_SIZE = 10;
+	private final int LONG_LINE = 20;
+	private final int DELTA_MARGIN = 10;
 
 	public TimeShaftLine(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -24,14 +27,13 @@ public class TimeShaftLine extends View {
 		mWidth = getContext().getResources().getDisplayMetrics().widthPixels;
 		mLineGap = (int) (mWidth / 12.5);
 	}
-	
-	public void setCurrentTopValue(int topValue){
+
+	public void setCurrentTopValue(int topValue) {
 		mTopValue = topValue;
 		postInvalidate();
 	}
 
-
-	@SuppressLint("DrawAllocation") 
+	@SuppressLint("DrawAllocation")
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
@@ -45,7 +47,7 @@ public class TimeShaftLine extends View {
 		float textWidth = Layout.getDesiredWidth("0", textPaint);
 		int numberSize = 1;
 
-		canvas.drawLine(0, TEXT_SIZE * mDensity, mWidth, TEXT_SIZE
+		canvas.drawLine(0, LONG_LINE * mDensity, mWidth, LONG_LINE
 				* mDensity, linePaint);
 
 		float marginLeft = 0;
@@ -53,16 +55,17 @@ public class TimeShaftLine extends View {
 			numberSize = String.valueOf(i + 1).length();
 			marginLeft = (float) ((i + 0.5) * mLineGap);
 			if (i == 0) {
-				canvas.drawLine(marginLeft, 0, marginLeft, 2 * TEXT_SIZE
+				canvas.drawLine(marginLeft, 0, marginLeft, (LONG_LINE+LINE_SIZE)
 						* mDensity, linePaint);
-				canvas.drawText(String.valueOf(mTopValue), marginLeft, 2 * TEXT_SIZE, textPaint);
+				canvas.drawText(String.valueOf(mTopValue), marginLeft+DELTA_MARGIN,
+						LONG_LINE * mDensity-DELTA_MARGIN, textPaint);
 			} else {
-				canvas.drawLine(marginLeft, TEXT_SIZE * mDensity, marginLeft, 2
-						* TEXT_SIZE * mDensity, linePaint);
+				canvas.drawLine(marginLeft, LONG_LINE * mDensity, marginLeft, (LONG_LINE+LINE_SIZE)
+						 * mDensity, linePaint);
 			}
 
 			canvas.drawText(String.valueOf(i + 1), marginLeft
-					- (textWidth * numberSize / 2), 3 * TEXT_SIZE * mDensity,
+					- (textWidth * numberSize / 2), (LONG_LINE+LINE_SIZE+TEXT_SIZE) * mDensity,
 					textPaint);
 		}
 	}

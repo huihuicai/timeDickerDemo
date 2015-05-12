@@ -17,11 +17,11 @@ import android.widget.LinearLayout;
 
 public class TimeShaftView extends FrameLayout {
 
-	public interface OnValueChangeListener1 {
+	public interface OnTimeChangeListener {
 		void oonValueChanged(boolean isSlipStop, int topValue, int bottomValue);
 	}
 
-	private OnValueChangeListener1 mOnValueChangeListener;
+	private OnTimeChangeListener mOnTimeChangeListener;
 
 	private HorizontalScrollViewShaft mHorizontalScrollView;
 	private LinearLayout mContainer;
@@ -91,6 +91,7 @@ public class TimeShaftView extends FrameLayout {
 		mMarkView.setBackgroundColor(Color.BLACK);
 		FrameLayout.LayoutParams layoutParams = new LayoutParams(2, 45);
 		layoutParams.leftMargin = mHalfLineGap;
+		System.out.println("µ±Ç°µÄmarginLeft:"+layoutParams.leftMargin);
 		addView(mMarkView, layoutParams);
 
 		mMoveMark = (ImageView) findViewById(R.id.move_mark);
@@ -119,8 +120,8 @@ public class TimeShaftView extends FrameLayout {
 					handleStop(deltayValue);
 				}
 
-				if (mOnValueChangeListener != null) {
-					mOnValueChangeListener.oonValueChanged(isStop,
+				if (mOnTimeChangeListener != null) {
+					mOnTimeChangeListener.oonValueChanged(isStop,
 							mCurrentYear, mCurrentMonth);
 				}
 			}
@@ -188,8 +189,8 @@ public class TimeShaftView extends FrameLayout {
 		animator.start();
 	}
 
-	public void setOnValueChangeListener(OnValueChangeListener1 changeListener) {
-		mOnValueChangeListener = changeListener;
+	public void setOnValueChangeListener(OnTimeChangeListener changeListener) {
+		mOnTimeChangeListener = changeListener;
 	}
 
 }
